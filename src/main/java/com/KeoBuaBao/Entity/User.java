@@ -17,7 +17,7 @@ public class User {
     private Long win; // Number of win in all multiplayer matches
     private Long tie; // Number of tie in all multiplayer matches
     private Long loss; // Number of losing game in all multiplayer matches
-    private Long character; // 1 to x according to the avatar (default profile picture)
+    private Long avatar; // 1 to x according to the avatar (default profile picture)
     private Long skinColor; // 1 to x according to the skin color
     private Long timePerMove; // Time to take a decision of rock/paper/scissors
     private Long numberRound; // The number of rounds in a game
@@ -76,12 +76,12 @@ public class User {
         this.loss = loss;
     }
 
-    public Long getCharacter() {
-        return character;
+    public Long getAvatar() {
+        return avatar;
     }
 
-    public void setCharacter(Long character) {
-        this.character = character;
+    public void setAvatar(Long avatar) {
+        this.avatar = avatar;
     }
 
     public Long getSkinColor() {

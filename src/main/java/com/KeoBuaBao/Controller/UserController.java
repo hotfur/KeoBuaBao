@@ -91,8 +91,8 @@ public class UserController {
         user.setTie(0L);
         user.setDrawSingle(0L);
 
-        if(user.getCharacter() == null)
-            user.setCharacter(RandomUtilis.getRandom(1L, 10L));
+        if(user.getAvatar() == null)
+            user.setAvatar(RandomUtilis.getRandom(1L, 10L));
         if(user.getSkinColor() == null)
             user.setSkinColor(RandomUtilis.getRandom(1L, 10L));
         if(user.getTimePerMove() == null)
@@ -143,7 +143,7 @@ public class UserController {
                     user.setWin(newUser.getWin());
                     user.setTie(newUser.getTie());
                     user.setLoss(newUser.getLoss());
-                    user.setCharacter(newUser.getCharacter());
+                    user.setAvatar(newUser.getAvatar());
                     user.setSkinColor(newUser.getSkinColor());
                     user.setTimePerMove(newUser.getTimePerMove());
                     user.setNumberRound(newUser.getNumberRound());
