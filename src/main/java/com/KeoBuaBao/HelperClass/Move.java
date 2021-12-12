@@ -1,7 +1,7 @@
-package com.KeoBuaBao.Entity;
+package com.KeoBuaBao.HelperClass;
 
 public class Move {
-    private Long move;
+    private long move;
 
     public Long getMove() {
         return move;

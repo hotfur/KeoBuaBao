@@ -1,4 +1,4 @@
-package com.KeoBuaBao.Entity;
+package com.KeoBuaBao.HelperClass;
 
 public class Response {
     private String status;

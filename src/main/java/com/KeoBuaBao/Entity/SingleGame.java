@@ -19,6 +19,7 @@ public class SingleGame {
     private Long difficulty;
     private String result;
     private String moves; // The field cannot be the list. Change to String by comma delimeter.
+    private String computerMoves;
 
     public Long getId() {
         return id;
@@ -82,5 +83,13 @@ public class SingleGame {
 
     public void setMoves(String moves) {
         this.moves = moves;
+    }
+
+    public String getComputerMoves() {
+        return computerMoves;
+    }
+
+    public void setComputerMoves(String computerMoves) {
+        this.computerMoves = computerMoves;
     }
 }

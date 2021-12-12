@@ -1,6 +1,6 @@
 package com.KeoBuaBao.Controller;
 
-import com.KeoBuaBao.Entity.Response;
+import com.KeoBuaBao.HelperClass.Response;
 import com.KeoBuaBao.Entity.User;
 import com.KeoBuaBao.Repository.UserRepository;
 import com.KeoBuaBao.Utility.RandomUtilis;
@@ -65,8 +65,6 @@ public class UserController {
             );
         }
 
-
-
         // Find username
         List<User> foundUser = userRepository.findByUsername(user.getUsername());
         if(foundUser.size() > 0) {
@@ -77,7 +75,7 @@ public class UserController {
 
         // Find email
         List<User> foundEmail = userRepository.findByEmail(user.getEmail());
-        if(foundUser.size() > 0) {
+        if(foundEmail.size() > 0) {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
                     new Response("fail", "Email is already taken", "")
             );
@@ -96,7 +94,7 @@ public class UserController {
         if(user.getSkinColor() == null)
             user.setSkinColor(RandomUtilis.getRandom(1L, 10L));
         if(user.getTimePerMove() == null)
-            user.setSkinColor(RandomUtilis.getRandom(1L, 10L));
+            user.setTimePerMove(RandomUtilis.getRandom(1L, 10L));
         if(user.getNumberRound() == null)
             user.setNumberRound(RandomUtilis.getRandom(1L, 10L));
         if(user.getDifficulty() == null)

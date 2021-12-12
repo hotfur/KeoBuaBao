@@ -1,7 +1,7 @@
 package com.KeoBuaBao.Controller;
 
-import com.KeoBuaBao.Entity.Move;
-import com.KeoBuaBao.Entity.Response;
+import com.KeoBuaBao.HelperClass.Move;
+import com.KeoBuaBao.HelperClass.Response;
 import com.KeoBuaBao.Entity.SingleGame;
 import com.KeoBuaBao.Entity.User;
 import com.KeoBuaBao.Repository.SingleGameRepository;
@@ -13,7 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -73,7 +72,7 @@ public class SingleGameController {
         );
     }
 
-    @PostMapping("/{id}")
+    @PostMapping("/{gameID}")
     public ResponseEntity<Response> playWithComputer(@PathVariable long gameID, @RequestBody Move playerMove) {
         long computerMove = RandomUtilis.getRandom(1L, 3L);
         Optional<SingleGame> foundSingleGame = singleGameRepository.findById(gameID);
@@ -89,5 +88,8 @@ public class SingleGameController {
         return ResponseEntity.status(HttpStatus.OK).body(
                 new Response("ok", "This move is successfully sent", "")
         );
+
+        // Check the result to determine the status of the game. Game with finished status cannot be played.
+        // Return the move from the computer.
     }
 }
