@@ -110,54 +110,120 @@ public class UserController {
         );
     }
 
-    // API update (upsert): Update if found, otherwise insert
+//    // API update (upsert): Update if found, otherwise insert
+//    @PutMapping("/{id}")
+//    public ResponseEntity<Response> updateUser(@PathVariable long id, @RequestBody User newUser) {
+//        // Check null username
+//        if(newUser.getUsername() == null) {
+//            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
+//                    new Response("fail", "Username cannot be empty", "")
+//            );
+//        }
+//
+//        // Check null password
+//        if(newUser.getPassword() == null) {
+//            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
+//                    new Response("fail", "Password cannot be empty", "")
+//            );
+//        }
+//
+//        // Check null email
+//        if(newUser.getEmail() == null) {
+//            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
+//                    new Response("fail", "Email cannot be empty", "")
+//            );
+//        }
+//
+//        User updatedUser = userRepository.findById(id)
+//                .map(user -> {
+//                    user.setUsername(newUser.getUsername());
+//                    user.setPassword(SecurityUtils.hashPassword(user.getPassword()));
+//                    user.setWin(newUser.getWin());
+//                    user.setTie(newUser.getTie());
+//                    user.setLoss(newUser.getLoss());
+//                    user.setAvatar(newUser.getAvatar());
+//                    user.setSkinColor(newUser.getSkinColor());
+//                    user.setTimePerMove(newUser.getTimePerMove());
+//                    user.setNumberRound(newUser.getNumberRound());
+//                    user.setDifficulty(newUser.getDifficulty());
+//                    user.setRoomId(newUser.getRoomId());
+//                    user.setStatus(newUser.getStatus());
+//                    user.setWinSingle(newUser.getWinSingle());
+//                    user.setDrawSingle(newUser.getDrawSingle());
+//                    user.setLostSingle(newUser.getLostSingle());
+//                    return userRepository.save(user);
+//                }).orElseGet(() -> {
+//                    newUser.setId(id);
+//                    return userRepository.save(newUser);
+//                });
+//        return ResponseEntity.status(HttpStatus.OK).body(
+//                new Response("ok", "Update user successfully", updatedUser)
+//        );
+//    }
+
     @PutMapping("/{id}")
-    public ResponseEntity<Response> updateUser(@PathVariable long id, @RequestBody User newUser) {
-        // Check null username
-        if(newUser.getUsername() == null) {
+    public ResponseEntity<Response> updateUser(@PathVariable Long id, @RequestBody User newUser) {
+        // Find username
+        List<User> foundUsername = userRepository.findByUsername(newUser.getUsername());
+        if(foundUsername.size() > 0) {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
-                    new Response("fail", "Username cannot be empty", "")
+                    new Response("fail", "Username is already taken", "")
             );
         }
 
-        // Check null password
-        if(newUser.getPassword() == null) {
+        // Find email
+        List<User> foundEmail = userRepository.findByEmail(newUser.getEmail());
+        if(foundEmail.size() > 0) {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
-                    new Response("fail", "Password cannot be empty", "")
+                    new Response("fail", "Email is already taken", "")
             );
         }
 
-        // Check null email
-        if(newUser.getEmail() == null) {
+        Optional<User> foundUser = userRepository.findById(id);
+        if(!foundUser.isPresent())
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
-                    new Response("fail", "Email cannot be empty", "")
+                    new Response("fail", "Cannot find the user", "")
             );
-        }
 
-        User updatedUser = userRepository.findById(id)
-                .map(user -> {
-                    user.setUsername(newUser.getUsername());
-                    user.setPassword(SecurityUtils.hashPassword(user.getPassword()));
-                    user.setWin(newUser.getWin());
-                    user.setTie(newUser.getTie());
-                    user.setLoss(newUser.getLoss());
-                    user.setAvatar(newUser.getAvatar());
-                    user.setSkinColor(newUser.getSkinColor());
-                    user.setTimePerMove(newUser.getTimePerMove());
-                    user.setNumberRound(newUser.getNumberRound());
-                    user.setDifficulty(newUser.getDifficulty());
-                    user.setRoomId(newUser.getRoomId());
-                    user.setStatus(newUser.getStatus());
-                    user.setWinSingle(newUser.getWinSingle());
-                    user.setDrawSingle(newUser.getDrawSingle());
-                    user.setLostSingle(newUser.getLostSingle());
-                    return userRepository.save(user);
-                }).orElseGet(() -> {
-                    newUser.setId(id);
-                    return userRepository.save(newUser);
-                });
+        User currentUser = foundUser.get();
+
+        // Update all the fields appropriately
+        if(newUser.getUsername() != null)
+            currentUser.setUsername(newUser.getUsername());
+        if(newUser.getEmail() != null)
+            currentUser.setEmail(newUser.getEmail());
+        if(newUser.getPassword() != null)
+            currentUser.setPassword(SecurityUtils.hashPassword(newUser.getPassword()));
+        if(newUser.getWin() != null)
+            currentUser.setWin(newUser.getWin());
+        if(newUser.getTie() != null)
+            currentUser.setTie(newUser.getTie());
+        if(newUser.getLoss() != null)
+            currentUser.setLoss(newUser.getLoss());
+        if(newUser.getAvatar() != null)
+            currentUser.setAvatar(newUser.getAvatar());
+        if(newUser.getSkinColor() != null)
+            currentUser.setSkinColor(newUser.getSkinColor());
+        if(newUser.getTimePerMove() != null)
+            currentUser.setTimePerMove(newUser.getTimePerMove());
+        if(newUser.getNumberRound() != null)
+            currentUser.setNumberRound(newUser.getNumberRound());
+        if(newUser.getDifficulty() != null)
+            currentUser.setDifficulty(newUser.getDifficulty());
+        if(newUser.getRoomId() != null)
+            currentUser.setRoomId(newUser.getRoomId());
+        if(newUser.getStatus() != null)
+            currentUser.setStatus(newUser.getStatus());
+        if(newUser.getWinSingle() != null)
+            currentUser.setWinSingle(newUser.getWinSingle());
+        if(newUser.getDrawSingle() != null)
+            currentUser.setDrawSingle(newUser.getDrawSingle());
+        if(newUser.getLostSingle() != null)
+            currentUser.setLostSingle(newUser.getLostSingle());
+
+        userRepository.save(currentUser); // Save the updated record to the database
         return ResponseEntity.status(HttpStatus.OK).body(
-                new Response("ok", "Update user successfully", updatedUser)
+                new Response("ok", "Update user successfully", currentUser)
         );
     }
 
@@ -179,7 +245,7 @@ public class UserController {
     // API Log in
     @PostMapping("/checkPassword")
     public ResponseEntity<Response> checkPassword(@RequestBody User user) {
-        List<User> foundUserList = userRepository.findByUsernameAndPassword(user.getUsername(), user.getPassword());
+        List<User> foundUserList = userRepository.findByUsernameAndPassword(user.getUsername(), SecurityUtils.hashPassword(user.getPassword()));
 
         if (foundUserList.size() > 0) {
             User userRecord = foundUserList.get(0);

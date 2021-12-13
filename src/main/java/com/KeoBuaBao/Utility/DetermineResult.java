@@ -4,21 +4,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DetermineResult {
-    private static void playerOneWin(List<Integer> resultList) {
-        resultList.set(0, 1);
-        resultList.set(1, -1);
+    private static void playerOneWin(List<String> resultList) {
+        resultList.set(0, "+");
+        resultList.set(1, "-");
     }
 
-    private static void playerTwoWin(List<Integer> resultList) {
-        resultList.set(0, -1);
-        resultList.set(1, 1);
+    private static void playerTwoWin(List<String> resultList) {
+        resultList.set(0, "-");
+        resultList.set(1, "+");
     }
 
-    public static List<Integer> announceResult(int playerOneChoice, int playerTwoChoice) {
-        List<Integer> resultList = new ArrayList<Integer>();
-        resultList.add(0);
-        resultList.add(0);
-        if(playerOneChoice == playerOneChoice)
+    public static List<String> announceResult(long playerOneChoice, long playerTwoChoice) {
+        List<String> resultList = new ArrayList<String>();
+        resultList.add("0");
+        resultList.add("0");
+        if(playerOneChoice == playerTwoChoice)
             return resultList;
         else {
             if(playerOneChoice == 1) {
