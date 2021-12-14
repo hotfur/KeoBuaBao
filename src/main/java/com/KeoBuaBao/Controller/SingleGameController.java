@@ -1,5 +1,6 @@
 package com.KeoBuaBao.Controller;
 
+import com.KeoBuaBao.HelperClass.DetailResult;
 import com.KeoBuaBao.HelperClass.Move;
 import com.KeoBuaBao.HelperClass.Response;
 import com.KeoBuaBao.Entity.SingleGame;
@@ -86,10 +87,27 @@ public class SingleGameController {
             );
 
         SingleGame currentSingleGame = foundSingleGame.get();
-        if(currentSingleGame.getResult().length() >= currentSingleGame.getNumberOfRounds())
+        if(currentSingleGame.getResult().length() >= currentSingleGame.getNumberOfRounds()) {
+            long countWin = 0;
+            long countDraw = 0;
+            long countLose = 0;
+            String result = currentSingleGame.getResult();
+            for(int i = 0; i < result.length(); i++) {
+                if(result.charAt(i) == '+')
+                    countWin++;
+                else if(result.charAt(i) == '-')
+                    countLose++;
+                else if(result.charAt(i) == '0')
+                    countDraw++;
+            }
+
+            DetailResult detailResult = new DetailResult(countWin, countDraw, countLose);
+
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new Response("fail", "Game over!", currentSingleGame.getResult())
+                    new Response("done", "Game over!", detailResult)
             );
+        }
+
 
         // Player one is the user whereas player two is the computer when passing.
         List<String> resultList = DetermineResult.announceResult(playerMove.getMove(), computerMove);
@@ -100,20 +118,42 @@ public class SingleGameController {
         singleGame.setResult(singleGame.getResult() + resultList.get(0));
         singleGameRepository.save(singleGame);
 
-        if(resultList.get(0).equals("+") && resultList.get(1).equals("-"))
-            return ResponseEntity.status(HttpStatus.OK).body(
-                    new Response("ok", "This move is successfully sent. Congratulation! You have won this round!",  computerMove)
-            );
+        // Winning case: Player beats computer
+        if(resultList.get(0).equals("+") && resultList.get(1).equals("-")) {
+            List<User> foundUser = userRepository.findByUsername(singleGame.getPlayer());
+            User currentUser = foundUser.get(0);
+            currentUser.setWinSingle(currentUser.getWinSingle() + 1);
+            userRepository.save(currentUser);
 
-        else if(resultList.get(0).equals("-") && resultList.get(1).equals("+"))
             return ResponseEntity.status(HttpStatus.OK).body(
-                    new Response("ok", "This move is successfully sent. Unfortunately, the computer has beaten you!",  computerMove)
+                    new Response("ok", "This move is successfully sent. Congratulation! You have won this round!", computerMove)
             );
+        }
 
-        else
+        // Losing case: Player loses computer
+        else if(resultList.get(0).equals("-") && resultList.get(1).equals("+")) {
+            List<User> foundUser = userRepository.findByUsername(singleGame.getPlayer());
+            User currentUser = foundUser.get(0);
+            currentUser.setLostSingle(currentUser.getLostSingle() + 1);
+            userRepository.save(currentUser);
+
             return ResponseEntity.status(HttpStatus.OK).body(
-                    new Response("ok", "This move is successfully sent. The game results in a draw!",  computerMove)
+                    new Response("ok", "This move is successfully sent. Unfortunately, the computer has beaten you!", computerMove)
             );
+        }
+
+        // Game draw
+        else {
+            List<User> foundUser = userRepository.findByUsername(singleGame.getPlayer());
+            User currentUser = foundUser.get(0);
+            currentUser.setDrawSingle(currentUser.getDrawSingle() + 1);
+            userRepository.save(currentUser);
+
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    new Response("ok", "This move is successfully sent. The game results in a draw!", computerMove)
+            );
+        }
+
 
         // Check the result to determine the status of the game. Game with finished status cannot be played.
         // Return the move from the computer.
