@@ -47,7 +47,7 @@ public class SingleGameController {
 
     @PostMapping("")
     public ResponseEntity<Response> createSingleGame(@RequestBody User user) {
-        if (user.getUsername().isEmpty()) {
+        if (user.getUsername() == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                     new Response("fail", "Username cannot be empty", "")
             );
