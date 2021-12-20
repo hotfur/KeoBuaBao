@@ -2,6 +2,7 @@ package com.KeoBuaBao.Controller;
 
 import com.KeoBuaBao.Entity.Room;
 import com.KeoBuaBao.Entity.User;
+import com.KeoBuaBao.HelperClass.EnterGame;
 import com.KeoBuaBao.HelperClass.JoinRoom;
 import com.KeoBuaBao.HelperClass.Response;
 import com.KeoBuaBao.Repository.RoomRepository;
@@ -129,8 +130,15 @@ public class RoomController {
 
             currentUser.setRoomId(null);
             userRepository.save(currentUser);
-
         }
+
+        if(currentRoom.getPlayerOne() != null && currentRoom.getPlayerOne().equals(username.getUsername()))
+            currentRoom.setPlayerOne(null);
+
+        if(currentRoom.getPlayerTwo() != null && currentRoom.getPlayerTwo().equals(username.getUsername()))
+            currentRoom.setPlayerTwo(null);
+
+        roomRepository.save(currentRoom);
         return ResponseEntity.status(HttpStatus.OK).body(
                 new Response("ok", "You have been out of the room", "")
         );
@@ -181,6 +189,128 @@ public class RoomController {
 
         return ResponseEntity.status(HttpStatus.OK).body(
                 new Response("ok", "Join the room successfully", "")
+        );
+    }
+
+    // Enter a game seat API
+    @PostMapping("/enter_play_seat")
+    public ResponseEntity<Response> joinPlaySeat(@RequestBody EnterGame newPlayer) {
+        if (newPlayer.getUsername() == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    new Response("fail", "Username cannot be empty", "")
+            );
+        }
+
+        List<User> foundUsername = userRepository.findByUsername(newPlayer.getUsername());
+        if (foundUsername.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    new Response("fail", "Cannot find the user", "")
+            );
+        }
+
+        User currentUser = foundUsername.get(0);
+
+        Optional<Room> foundRoom = roomRepository.findById(currentUser.getRoomId());
+        if(!foundRoom.isPresent()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    new Response("fail", "Cannot find the room", "")
+            );
+        }
+
+        Room currentRoom = foundRoom.get();
+
+        if(newPlayer.getPlayerPosition() != 1 && newPlayer.getPlayerPosition() != 2) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    new Response("fail", "Invalid seat, only seat number one or two", "")
+            );
+        }
+
+        if(currentRoom.getPlayerOne() != null && currentRoom.getPlayerOne().equals(newPlayer.getUsername())) {
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
+                    new Response("fail", "You are already in seat one", "")
+            );
+        }
+
+        if(currentRoom.getPlayerTwo() != null && currentRoom.getPlayerTwo().equals(newPlayer.getUsername())) {
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
+                    new Response("fail", "You are already in seat two", "")
+            );
+        }
+
+        if(newPlayer.getPlayerPosition() == 1) {
+            if(currentRoom.getPlayerOne() == null)
+                currentRoom.setPlayerOne(newPlayer.getUsername());
+            else {
+                return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
+                        new Response("fail", "Seat is already occupied", "")
+                );
+            }
+        }
+
+        else {
+            if(currentRoom.getPlayerTwo() == null)
+                currentRoom.setPlayerTwo(newPlayer.getUsername());
+            else {
+                return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
+                        new Response("fail", "Seat is already occupied", "")
+                );
+            }
+        }
+
+        roomRepository.save(currentRoom);
+        return ResponseEntity.status(HttpStatus.OK).body(
+                new Response("ok", "You are now player " + newPlayer.getPlayerPosition(), "")
+        );
+    }
+
+    // Enter a game seat API
+    @PostMapping("/quit_play_seat")
+    public ResponseEntity<Response> quitPlaySeat(@RequestBody User username) {
+        if (username.getUsername() == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    new Response("fail", "Username cannot be empty", "")
+            );
+        }
+
+        List<User> foundUsername = userRepository.findByUsername(username.getUsername());
+        if (foundUsername.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    new Response("fail", "Cannot find the user", "")
+            );
+        }
+
+        User currentUser = foundUsername.get(0);
+
+        if(currentUser.getRoomId() == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    new Response("fail", "You are not belonged to any rooms", "")
+            );
+        }
+
+        Optional<Room> foundRoom = roomRepository.findById(currentUser.getRoomId());
+        if(!foundRoom.isPresent()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    new Response("fail", "Cannot find the room", "")
+            );
+        }
+
+        Room currentRoom = foundRoom.get();
+
+        // The player is in seat one
+        if(username.getUsername().equals(currentRoom.getPlayerOne()))
+            currentRoom.setPlayerOne(null);
+
+        else if(username.getUsername().equals(currentRoom.getPlayerTwo()))
+            currentRoom.setPlayerTwo(null);
+
+        else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    new Response("fail", "You do not belong to any seats", "")
+            );
+        }
+        roomRepository.save(currentRoom);
+        return ResponseEntity.status(HttpStatus.OK).body(
+                new Response("ok", "You are now out of the seat", "")
         );
     }
 }

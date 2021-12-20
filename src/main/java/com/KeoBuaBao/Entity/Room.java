@@ -16,6 +16,8 @@ public class Room {
     private String players;
     private String disconnectedPlayers;
     private String timersSinceDisconnected;
+    private String playerOne;
+    private String playerTwo;
 
     public Long getId() {
         return id;
@@ -55,5 +57,21 @@ public class Room {
 
     public void setTimersSinceDisconnected(String timersSinceDisconnected) {
         this.timersSinceDisconnected = timersSinceDisconnected;
+    }
+
+    public String getPlayerOne() {
+        return playerOne;
+    }
+
+    public void setPlayerOne(String playerOne) {
+        this.playerOne = playerOne;
+    }
+
+    public String getPlayerTwo() {
+        return playerTwo;
+    }
+
+    public void setPlayerTwo(String playerTwo) {
+        this.playerTwo = playerTwo;
     }
 }
