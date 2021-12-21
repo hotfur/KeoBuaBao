@@ -10,8 +10,7 @@ import javax.persistence.*;
 public class PlayerMultiGame {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Getter
-    private Long id;
+    @Getter private Long id;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
