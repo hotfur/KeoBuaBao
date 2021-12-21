@@ -1,15 +1,20 @@
 package com.KeoBuaBao.Entity;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import javax.persistence.*;
+import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
+    @JsonIgnoreProperties("user")
+    private List<PlayerMultiGame> PlayerMultiGame = new ArrayList<>();
 
     private String username;
     private String email;
@@ -162,5 +167,13 @@ public class User {
 
     public void setDrawSingle(Long drawSingle) {
         this.drawSingle = drawSingle;
+    }
+
+    public List<com.KeoBuaBao.Entity.PlayerMultiGame> getPlayerMultiGame() {
+        return PlayerMultiGame;
+    }
+
+    public void setPlayerMultiGame(List<com.KeoBuaBao.Entity.PlayerMultiGame> playerMultiGame) {
+        PlayerMultiGame = playerMultiGame;
     }
 }

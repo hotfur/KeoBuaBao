@@ -1,15 +1,21 @@
 package com.KeoBuaBao.Entity;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class MultiGame {
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "multiGame", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties("multiGame")
+    private List<PlayerMultiGame> PlayerMultiGame = new ArrayList<PlayerMultiGame>();
 
     private String dateTime;
     private Long timePerMove;
@@ -63,5 +69,13 @@ public class MultiGame {
 
     public void setResultTwo(String resultTwo) {
         this.resultTwo = resultTwo;
+    }
+
+    public List<com.KeoBuaBao.Entity.PlayerMultiGame> getPlayerMultiGame() {
+        return PlayerMultiGame;
+    }
+
+    public void setPlayerMultiGame(List<com.KeoBuaBao.Entity.PlayerMultiGame> playerMultiGame) {
+        PlayerMultiGame = playerMultiGame;
     }
 }

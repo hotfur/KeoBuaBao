@@ -1,10 +1,12 @@
 package com.KeoBuaBao.Controller;
 
 import com.KeoBuaBao.Entity.MultiGame;
+import com.KeoBuaBao.Entity.PlayerMultiGame;
 import com.KeoBuaBao.Entity.Room;
 import com.KeoBuaBao.Entity.User;
 import com.KeoBuaBao.HelperClass.Response;
 import com.KeoBuaBao.Repository.MultiGameRepository;
+import com.KeoBuaBao.Repository.PlayerMultiGameRepository;
 import com.KeoBuaBao.Repository.RoomRepository;
 import com.KeoBuaBao.Repository.UserRepository;
 import com.KeoBuaBao.Utility.DateUtilis;
@@ -25,6 +27,8 @@ public class MutiGameController {
     private RoomRepository roomRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private PlayerMultiGameRepository PlayerMultiGameRepository;
 
     @GetMapping("")
     public List<MultiGame> getAllMultiplayerGame() {
@@ -57,11 +61,21 @@ public class MutiGameController {
         multiGame.setNumberRounds(host.getNumberRound());
         multiGame.setResultOne("");
         multiGame.setResultTwo("");
+
+        PlayerMultiGame playerMultiGame_1 = new PlayerMultiGame();
+        playerMultiGame_1.setMultiGame(multiGame);
+        playerMultiGame_1.setUser(userRepository.findByUsername(currentRoom.getPlayerOne()).get(0));
+        PlayerMultiGame playerMultiGame_2 = new PlayerMultiGame();
+        playerMultiGame_2.setMultiGame(multiGame);
+        playerMultiGame_2.setUser(userRepository.findByUsername(currentRoom.getPlayerTwo()).get(0));
+
+        PlayerMultiGameRepository.save(playerMultiGame_1);
+        PlayerMultiGameRepository.save(playerMultiGame_2);
         multiGameRepository.save(multiGame);
 
         return ResponseEntity.status(HttpStatus.OK).body(
                     new Response("ok", "Create game successfully" , multiGame)
             );
-
     }
+
 }
