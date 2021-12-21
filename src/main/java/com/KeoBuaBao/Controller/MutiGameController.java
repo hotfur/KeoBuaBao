@@ -145,6 +145,13 @@ public class MutiGameController {
         }
 
         MultiGame currentMultigame = foundMultiGame.get();
+        if(currentMultigame.getResultOne().length() >= currentMultigame.getNumberRounds()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    new Response("done", "Game over!", "")
+            );
+        }
+
+
         List<PlayerMultiGame> playerMultiGameList = currentMultigame.getPlayerMultiGame();
         List<String> usernameList = new ArrayList<String>();
 
@@ -191,7 +198,7 @@ public class MutiGameController {
         else {
             String player1moves = playerMultiGameList.get(0).getMoves();
             String player2moves = playerMultiGameList.get(1).getMoves();
-            List<String> resultList = DetermineResult.announceResult(player1moves.charAt(player1moves.length()-1), player2moves.charAt(player2moves.length()-1));
+            List<String> resultList = DetermineResult.announceResult(player1moves.charAt(player1moves.length() - 1), player2moves.charAt(player2moves.length() - 1));
             currentMultigame.setResultOne(currentMultigame.getResultOne() + resultList.get(0));
             currentMultigame.setResultTwo(currentMultigame.getResultTwo() + resultList.get(1));
             multiGameRepository.save(currentMultigame);
@@ -200,7 +207,7 @@ public class MutiGameController {
             else if (resultList.get(playerPosition).equals("-")) returnString = "Unfortunately, the opponent has beaten you!";
             else returnString = "The game results in a draw!";
             return ResponseEntity.status(HttpStatus.OK).body(
-                    new Response("OK", returnString, opponentPlayerMultiGame.getMoves().charAt(opponentPlayer_MoveNumber-1))
+                    new Response("OK", returnString, opponentPlayerMultiGame.getMoves().charAt(opponentPlayer_MoveNumber - 1))
             );
         }
     }

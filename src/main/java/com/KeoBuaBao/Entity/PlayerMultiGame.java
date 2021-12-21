@@ -1,6 +1,8 @@
 package com.KeoBuaBao.Entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.*;
 
@@ -8,48 +10,18 @@ import javax.persistence.*;
 public class PlayerMultiGame {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Getter
     private Long id;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
+    @Getter @Setter
     private MultiGame multiGame;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnore
+    @Getter @Setter
     private User user;
 
-    private String moves = "";
-
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public MultiGame getMultiGame() {
-        return multiGame;
-    }
-
-    public void setMultiGame(MultiGame multiGame) {
-        this.multiGame = multiGame;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public String getMoves() {
-        return moves;
-    }
-
-    public void setMoves(String moves) {
-        this.moves = moves;
-    }
+    @Getter @Setter private String moves = "";
 }

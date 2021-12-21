@@ -1,8 +1,8 @@
 package com.KeoBuaBao.Entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -19,65 +19,9 @@ public class MultiGame {
     @JsonIgnore
     private List<PlayerMultiGame> PlayerMultiGame = new ArrayList<PlayerMultiGame>();
 
-    private String dateTime;
-    private Long timePerMove;
-    private Long numberRounds;
-    private String resultOne;
-    private String resultTwo;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getDateTime() {
-        return dateTime;
-    }
-
-    public void setDateTime(String dateTime) {
-        this.dateTime = dateTime;
-    }
-
-    public Long getTimePerMove() {
-        return timePerMove;
-    }
-
-    public void setTimePerMove(Long timePerMove) {
-        this.timePerMove = timePerMove;
-    }
-
-    public Long getNumberRounds() {
-        return numberRounds;
-    }
-
-    public void setNumberRounds(Long numberRounds) {
-        this.numberRounds = numberRounds;
-    }
-
-    public String getResultOne() {
-        return resultOne;
-    }
-
-    public void setResultOne(String resultOne) {
-        this.resultOne = resultOne;
-    }
-
-    public String getResultTwo() {
-        return resultTwo;
-    }
-
-    public void setResultTwo(String resultTwo) {
-        this.resultTwo = resultTwo;
-    }
-
-    public List<com.KeoBuaBao.Entity.PlayerMultiGame> getPlayerMultiGame() {
-        return PlayerMultiGame;
-    }
-
-    public void setPlayerMultiGame(List<com.KeoBuaBao.Entity.PlayerMultiGame> playerMultiGame) {
-        PlayerMultiGame = playerMultiGame;
-    }
+    @Getter @Setter private String dateTime;
+    @Getter @Setter private Long timePerMove;
+    @Getter @Setter private Long numberRounds;
+    @Getter @Setter private String resultOne;
+    @Getter @Setter private String resultTwo;
 }
