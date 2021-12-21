@@ -86,6 +86,12 @@ public class SingleGameController {
                     new Response("fail", "Cannot find the game belong to the user", "")
             );
 
+        if(playerMove.getMove() < 1 || playerMove.getMove() > 3) {
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
+                    new Response("fail", "Illegal move", "")
+            );
+        }
+
         SingleGame currentSingleGame = foundSingleGame.get();
         if(currentSingleGame.getResult().length() >= currentSingleGame.getNumberOfRounds()) {
             long countWin = 0;

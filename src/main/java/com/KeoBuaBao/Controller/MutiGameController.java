@@ -1,15 +1,17 @@
 package com.KeoBuaBao.Controller;
 
-import com.KeoBuaBao.Entity.MultiGame;
-import com.KeoBuaBao.Entity.PlayerMultiGame;
-import com.KeoBuaBao.Entity.Room;
-import com.KeoBuaBao.Entity.User;
+import com.KeoBuaBao.Entity.*;
+import com.KeoBuaBao.HelperClass.DetailResult;
+import com.KeoBuaBao.HelperClass.Move;
+import com.KeoBuaBao.HelperClass.MultiplayerMove;
 import com.KeoBuaBao.HelperClass.Response;
 import com.KeoBuaBao.Repository.MultiGameRepository;
 import com.KeoBuaBao.Repository.PlayerMultiGameRepository;
 import com.KeoBuaBao.Repository.RoomRepository;
 import com.KeoBuaBao.Repository.UserRepository;
 import com.KeoBuaBao.Utility.DateUtilis;
+import com.KeoBuaBao.Utility.DetermineResult;
+import com.KeoBuaBao.Utility.RandomUtilis;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -92,6 +94,92 @@ public class MutiGameController {
 
         return ResponseEntity.status(HttpStatus.OK).body(
                     new Response("ok", "Create game successfully" , multiGame)
+        );
+    }
+
+    // API to get the player from a match
+    @GetMapping("/{gameID}")
+    public ResponseEntity<Response> getPlayerFromMatch(@PathVariable Long gameID) {
+        Optional<MultiGame> foundMultiGame = multiGameRepository.findById(gameID);
+        if(!foundMultiGame.isPresent()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    new Response("fail", "Cannot found the game", "")
             );
+        }
+
+        MultiGame currentMultigame = foundMultiGame.get();
+        List<PlayerMultiGame> playerMultiGameList = currentMultigame.getPlayerMultiGame();
+        List<String> usernameList = new ArrayList<String>();
+
+        for(int i = 0; i < playerMultiGameList.size(); i++) {
+            User currentUser = playerMultiGameList.get(i).getUser();
+            String username = currentUser.getUsername();
+            usernameList.add(username);
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(
+                new Response("ok", "Here is the players belong to the match" , usernameList)
+        );
+    }
+
+
+
+
+
+
+
+
+    @PostMapping("/playMultiplayer/{gameID}")
+    public ResponseEntity<Response> playOnline(@PathVariable long gameID, @RequestBody MultiplayerMove playerMove) {
+        Optional<MultiGame> foundMultiGame = multiGameRepository.findById(gameID);
+        if(!foundMultiGame.isPresent()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    new Response("fail", "Cannot found the game", "")
+            );
+        }
+
+        if(playerMove.getMove() < 1 || playerMove.getMove() > 3) {
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
+                    new Response("fail", "Illegal move", "")
+            );
+        }
+
+        MultiGame currentMultigame = foundMultiGame.get();
+        List<PlayerMultiGame> playerMultiGameList = currentMultigame.getPlayerMultiGame();
+        List<String> usernameList = new ArrayList<String>();
+
+        for(int i = 0; i < playerMultiGameList.size(); i++) {
+            User currentUser = playerMultiGameList.get(i).getUser();
+            String username = currentUser.getUsername();
+            usernameList.add(username);
+        }
+
+        if(usernameList.contains(playerMove.getUsername())) {
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
+                    new Response("fail", "You are not in the game", "")
+            );
+        }
+
+        int playerPosition = -1;
+        if(playerMove.getUsername().equals(usernameList.get(0))) {
+            playerPosition = 0;
+        }
+        else {
+            playerPosition = 1;
+        }
+
+        PlayerMultiGame currentPlayerMultiGame = playerMultiGameList.get(playerPosition);
+        currentPlayerMultiGame.setMoves(currentPlayerMultiGame.getMoves() + Long.toString(playerMove.getMove()));
+
+
+
+
+
+
+
+
+
+
+
     }
 }
