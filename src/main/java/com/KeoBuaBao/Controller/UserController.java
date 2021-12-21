@@ -241,21 +241,4 @@ public class UserController {
                 new Response("fail", "Cannot find the user to delete", "")
         );
     }
-
-    // API Log in
-    @PostMapping("/checkPassword")
-    public ResponseEntity<Response> checkPassword(@RequestBody User user) {
-        List<User> foundUserList = userRepository.findByUsernameAndPassword(user.getUsername(), SecurityUtils.hashPassword(user.getPassword()));
-
-        if (foundUserList.size() > 0) {
-            User userRecord = foundUserList.get(0);
-            return ResponseEntity.status(HttpStatus.OK).body(
-                    new Response("ok", "Correct", userRecord)
-            );
-        }
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                new Response("fail", "Incorrect username or password", "")
-        );
-    }
 }

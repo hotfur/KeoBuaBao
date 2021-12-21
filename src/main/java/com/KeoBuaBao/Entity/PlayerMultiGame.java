@@ -1,6 +1,6 @@
 package com.KeoBuaBao.Entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
 
@@ -11,11 +11,11 @@ public class PlayerMultiGame {
     private Long id;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnoreProperties("PlayerMultiGame")
+    @JsonIgnore
     private MultiGame multiGame;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JsonIgnoreProperties("PlayerMultiGame")
+    @JsonIgnore
     private User user;
 
     private String moves = "";

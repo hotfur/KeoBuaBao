@@ -1,5 +1,7 @@
 package com.KeoBuaBao.Entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import javax.persistence.*;
@@ -14,7 +16,7 @@ public class MultiGame {
     private Long id;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "multiGame", cascade = CascadeType.ALL)
-    @JsonIgnoreProperties("multiGame")
+    @JsonIgnore
     private List<PlayerMultiGame> PlayerMultiGame = new ArrayList<PlayerMultiGame>();
 
     private String dateTime;

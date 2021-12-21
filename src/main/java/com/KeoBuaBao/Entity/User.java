@@ -1,6 +1,9 @@
 package com.KeoBuaBao.Entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import javax.persistence.*;
 import java.util.List;
@@ -13,7 +16,7 @@ public class User {
     private Long id;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
-    @JsonIgnoreProperties("user")
+    @JsonIgnore
     private List<PlayerMultiGame> PlayerMultiGame = new ArrayList<>();
 
     private String username;
