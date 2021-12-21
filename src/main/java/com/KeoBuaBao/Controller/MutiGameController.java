@@ -168,18 +168,40 @@ public class MutiGameController {
             playerPosition = 1;
         }
 
+
         PlayerMultiGame currentPlayerMultiGame = playerMultiGameList.get(playerPosition);
-        currentPlayerMultiGame.setMoves(currentPlayerMultiGame.getMoves() + Long.toString(playerMove.getMove()));
+        PlayerMultiGame opponentPlayerMultiGame = playerMultiGameList.get(1 - playerPosition);
+        int currentPlayer_MoveNumber = currentPlayerMultiGame.getMoves().length();
+        int opponentPlayer_MoveNumber = opponentPlayerMultiGame.getMoves().length();
 
+        if (currentPlayer_MoveNumber > opponentPlayer_MoveNumber) {
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
+                    new Response("fail", "Please wait for the opponent to make a move", "")
+            );
+        }
 
+        currentPlayerMultiGame.setMoves(currentPlayerMultiGame.getMoves() + playerMove.getMove());
+        PlayerMultiGameRepository.save(currentPlayerMultiGame);
 
-
-
-
-
-
-
-
-
+        if (currentPlayer_MoveNumber + 1 > opponentPlayer_MoveNumber) {
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    new Response("OK", "Send move success! Please wait for the opponent to make a move", "")
+            );
+        }
+        else {
+            String player1moves = playerMultiGameList.get(0).getMoves();
+            String player2moves = playerMultiGameList.get(1).getMoves();
+            List<String> resultList = DetermineResult.announceResult(player1moves.charAt(player1moves.length()-1), player2moves.charAt(player2moves.length()-1));
+            currentMultigame.setResultOne(currentMultigame.getResultOne() + resultList.get(0));
+            currentMultigame.setResultTwo(currentMultigame.getResultTwo() + resultList.get(1));
+            multiGameRepository.save(currentMultigame);
+            String returnString;
+            if (resultList.get(playerPosition).equals("+")) returnString = "Congratulation! You have won this round!";
+            else if (resultList.get(playerPosition).equals("-")) returnString = "Unfortunately, the opponent has beaten you!";
+            else returnString = "The game results in a draw!";
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    new Response("OK", returnString, opponentPlayerMultiGame.getMoves().charAt(opponentPlayer_MoveNumber-1))
+            );
+        }
     }
 }
