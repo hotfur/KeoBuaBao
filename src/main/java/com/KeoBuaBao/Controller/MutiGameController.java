@@ -1,8 +1,7 @@
 package com.KeoBuaBao.Controller;
 
 import com.KeoBuaBao.Entity.*;
-import com.KeoBuaBao.HelperClass.DetailResult;
-import com.KeoBuaBao.HelperClass.Move;
+
 import com.KeoBuaBao.HelperClass.MultiplayerMove;
 import com.KeoBuaBao.HelperClass.Response;
 import com.KeoBuaBao.Repository.MultiGameRepository;
@@ -11,7 +10,6 @@ import com.KeoBuaBao.Repository.RoomRepository;
 import com.KeoBuaBao.Repository.UserRepository;
 import com.KeoBuaBao.Utility.DateUtilis;
 import com.KeoBuaBao.Utility.DetermineResult;
-import com.KeoBuaBao.Utility.RandomUtilis;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
 
 @RestController
 @RequestMapping("/multiplayer")
@@ -67,13 +66,13 @@ public class MutiGameController {
 
         User Player1 = userRepository.findByUsername(currentRoom.getPlayerOne()).get(0);
         User Player2 = userRepository.findByUsername(currentRoom.getPlayerTwo()).get(0);
-        PlayerMultiGame playerMultiGame_1 = new PlayerMultiGame();
+        var playerMultiGame_1 = new PlayerMultiGame();
         playerMultiGame_1.setMultiGame(multiGame);
         playerMultiGame_1.setUser(Player1);
-        PlayerMultiGame playerMultiGame_2 = new PlayerMultiGame();
+        var playerMultiGame_2 = new PlayerMultiGame();
         playerMultiGame_2.setMultiGame(multiGame);
         playerMultiGame_2.setUser(Player2);
-        List<PlayerMultiGame> PlayerList = new ArrayList<PlayerMultiGame>();
+        var PlayerList = new ArrayList<PlayerMultiGame>();
         PlayerList.add(playerMultiGame_1);
         PlayerList.add(playerMultiGame_2);
         multiGame.setPlayerMultiGame(PlayerList);
@@ -109,7 +108,7 @@ public class MutiGameController {
 
         MultiGame currentMultigame = foundMultiGame.get();
         List<PlayerMultiGame> playerMultiGameList = currentMultigame.getPlayerMultiGame();
-        List<String> usernameList = new ArrayList<String>();
+        var usernameList = new ArrayList<String>();
 
         for(int i = 0; i < playerMultiGameList.size(); i++) {
             User currentUser = playerMultiGameList.get(i).getUser();
@@ -153,7 +152,7 @@ public class MutiGameController {
 
 
         List<PlayerMultiGame> playerMultiGameList = currentMultigame.getPlayerMultiGame();
-        List<String> usernameList = new ArrayList<String>();
+        var usernameList = new ArrayList<String>();
 
         for(int i = 0; i < playerMultiGameList.size(); i++) {
             User currentUser = playerMultiGameList.get(i).getUser();

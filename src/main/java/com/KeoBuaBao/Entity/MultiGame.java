@@ -17,6 +17,7 @@ public class MultiGame {
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "multiGame", cascade = CascadeType.ALL)
     @JsonIgnore
+    @Getter @Setter
     private List<PlayerMultiGame> PlayerMultiGame = new ArrayList<PlayerMultiGame>();
 
     @Getter @Setter private String dateTime;
