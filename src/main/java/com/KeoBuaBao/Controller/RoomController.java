@@ -78,7 +78,7 @@ public class RoomController {
             );
         }
 
-        List<User> foundUsername = userRepository.findByUsername(username.getUsername());
+        var foundUsername = userRepository.findByUsername(username.getUsername());
         if (foundUsername.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                     new Response("fail", "Cannot find the user", "")
@@ -102,12 +102,11 @@ public class RoomController {
 
         Room currentRoom = foundRoom.get();
         String allPlayers = currentRoom.getPlayers();
-        List<String> allPlayersList = PlayersListUtilis.getAllPlayers(allPlayers);
+        var allPlayersList = PlayersListUtilis.getAllPlayers(allPlayers);
         // Check if this player is the host
         if(username.getUsername().equals(currentRoom.getHost())) {
             if(allPlayersList.isEmpty()) {
                 roomRepository.deleteById(currentUser.getRoomId());
-
                 currentUser.setRoomId(null);
                 userRepository.save(currentUser);
             }
@@ -201,7 +200,7 @@ public class RoomController {
             );
         }
 
-        List<User> foundUsername = userRepository.findByUsername(newPlayer.getUsername());
+        var foundUsername = userRepository.findByUsername(newPlayer.getUsername());
         if (foundUsername.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                     new Response("fail", "Cannot find the user", "")

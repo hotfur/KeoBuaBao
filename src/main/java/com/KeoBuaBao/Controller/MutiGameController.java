@@ -54,7 +54,7 @@ public class MutiGameController {
             );
         }
 
-        List<User> foundHost = userRepository.findByUsername(currentRoom.getHost());
+        var foundHost = userRepository.findByUsername(currentRoom.getHost());
         User host = foundHost.get(0);
 
         MultiGame multiGame = new MultiGame();
@@ -77,11 +77,11 @@ public class MutiGameController {
         PlayerList.add(playerMultiGame_2);
         multiGame.setPlayerMultiGame(PlayerList);
 
-        List<PlayerMultiGame> PlayerList1 = Player1.getPlayerMultiGame();
+        var PlayerList1 = Player1.getPlayerMultiGame();
         PlayerList1.add(playerMultiGame_1);
         Player1.setPlayerMultiGame(PlayerList1);
 
-        List<PlayerMultiGame> PlayerList2 = Player2.getPlayerMultiGame();
+        var PlayerList2 = Player2.getPlayerMultiGame();
         PlayerList2.add(playerMultiGame_2);
         Player2.setPlayerMultiGame(PlayerList2);
 
@@ -107,7 +107,7 @@ public class MutiGameController {
         }
 
         MultiGame currentMultigame = foundMultiGame.get();
-        List<PlayerMultiGame> playerMultiGameList = currentMultigame.getPlayerMultiGame();
+        var playerMultiGameList = currentMultigame.getPlayerMultiGame();
         var usernameList = new ArrayList<String>();
 
         for(int i = 0; i < playerMultiGameList.size(); i++) {
@@ -151,7 +151,7 @@ public class MutiGameController {
         }
 
 
-        List<PlayerMultiGame> playerMultiGameList = currentMultigame.getPlayerMultiGame();
+        var playerMultiGameList = currentMultigame.getPlayerMultiGame();
         var usernameList = new ArrayList<String>();
 
         for(int i = 0; i < playerMultiGameList.size(); i++) {
@@ -175,8 +175,8 @@ public class MutiGameController {
         }
 
 
-        PlayerMultiGame currentPlayerMultiGame = playerMultiGameList.get(playerPosition);
-        PlayerMultiGame opponentPlayerMultiGame = playerMultiGameList.get(1 - playerPosition);
+        var currentPlayerMultiGame = playerMultiGameList.get(playerPosition);
+        var opponentPlayerMultiGame = playerMultiGameList.get(1 - playerPosition);
         int currentPlayer_MoveNumber = currentPlayerMultiGame.getMoves().length();
         int opponentPlayer_MoveNumber = opponentPlayerMultiGame.getMoves().length();
 
@@ -197,7 +197,7 @@ public class MutiGameController {
         else {
             String player1moves = playerMultiGameList.get(0).getMoves();
             String player2moves = playerMultiGameList.get(1).getMoves();
-            List<String> resultList = DetermineResult.announceResult(player1moves.charAt(player1moves.length() - 1), player2moves.charAt(player2moves.length() - 1));
+            var resultList = DetermineResult.announceResult(player1moves.charAt(player1moves.length() - 1), player2moves.charAt(player2moves.length() - 1));
             currentMultigame.setResultOne(currentMultigame.getResultOne() + resultList.get(0));
             currentMultigame.setResultTwo(currentMultigame.getResultTwo() + resultList.get(1));
             multiGameRepository.save(currentMultigame);
@@ -210,4 +210,6 @@ public class MutiGameController {
             );
         }
     }
+
+
 }

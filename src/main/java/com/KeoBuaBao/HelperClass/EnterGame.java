@@ -1,22 +1,9 @@
 package com.KeoBuaBao.HelperClass;
 
+import lombok.Getter;
+import lombok.Setter;
+
 public class EnterGame {
-    private String username;
-    private int playerPosition;
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public Integer getPlayerPosition() {
-        return playerPosition;
-    }
-
-    public void setPlayerPosition(Integer playerPosition) {
-        this.playerPosition = playerPosition;
-    }
+    @Getter @Setter private String username;
+    @Getter @Setter private int playerPosition;
 }

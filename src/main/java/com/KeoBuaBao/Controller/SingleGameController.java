@@ -116,7 +116,7 @@ public class SingleGameController {
 
 
         // Player one is the user whereas player two is the computer when passing.
-        List<String> resultList = DetermineResult.announceResult(playerMove.getMove(), computerMove);
+        var resultList = DetermineResult.announceResult(playerMove.getMove(), computerMove);
 
         SingleGame singleGame = foundSingleGame.get();
         singleGame.setMoves(singleGame.getMoves() + Long.toString(playerMove.getMove()));
@@ -138,7 +138,7 @@ public class SingleGameController {
 
         // Losing case: Player loses computer
         else if(resultList.get(0).equals("-") && resultList.get(1).equals("+")) {
-            List<User> foundUser = userRepository.findByUsername(singleGame.getPlayer());
+            var foundUser = userRepository.findByUsername(singleGame.getPlayer());
             User currentUser = foundUser.get(0);
             currentUser.setLostSingle(currentUser.getLostSingle() + 1);
             userRepository.save(currentUser);
@@ -150,7 +150,7 @@ public class SingleGameController {
 
         // Game draw
         else {
-            List<User> foundUser = userRepository.findByUsername(singleGame.getPlayer());
+            var foundUser = userRepository.findByUsername(singleGame.getPlayer());
             User currentUser = foundUser.get(0);
             currentUser.setDrawSingle(currentUser.getDrawSingle() + 1);
             userRepository.save(currentUser);

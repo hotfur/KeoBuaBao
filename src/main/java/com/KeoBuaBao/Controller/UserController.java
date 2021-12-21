@@ -66,7 +66,7 @@ public class UserController {
         }
 
         // Find username
-        List<User> foundUser = userRepository.findByUsername(user.getUsername());
+        var foundUser = userRepository.findByUsername(user.getUsername());
         if(foundUser.size() > 0) {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
                     new Response("fail", "Username is already taken", "")
@@ -74,7 +74,7 @@ public class UserController {
         }
 
         // Find email
-        List<User> foundEmail = userRepository.findByEmail(user.getEmail());
+        var foundEmail = userRepository.findByEmail(user.getEmail());
         if(foundEmail.size() > 0) {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
                     new Response("fail", "Email is already taken", "")
@@ -164,7 +164,7 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<Response> updateUser(@PathVariable Long id, @RequestBody User newUser) {
         // Find username
-        List<User> foundUsername = userRepository.findByUsername(newUser.getUsername());
+        var foundUsername = userRepository.findByUsername(newUser.getUsername());
         if(foundUsername.size() > 0) {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
                     new Response("fail", "Username is already taken", "")
@@ -172,7 +172,7 @@ public class UserController {
         }
 
         // Find email
-        List<User> foundEmail = userRepository.findByEmail(newUser.getEmail());
+        var foundEmail = userRepository.findByEmail(newUser.getEmail());
         if(foundEmail.size() > 0) {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
                     new Response("fail", "Email is already taken", "")
