@@ -20,11 +20,15 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
-    //Tell if an object is already taken
-    private static ResponseEntity<Response> taken(String object) {
+    //Return an error if an object is already taken
+    private static ResponseEntity<Response> TakenError(String object) {
         return Errors.NotImplemented(object + " is already taken");
     }
-    //Tell
+    //Return an error if an object is empty
+    private static ResponseEntity<Response> EmptyError(String object) {
+        return Errors.NotImplemented(object + " cannot be empty");
+    }
+
 
     // API get all users
     @GetMapping("")
@@ -44,27 +48,21 @@ public class UserController {
     @PostMapping("")
     public ResponseEntity<Response> addUser(@RequestBody User user) {
         // Check null username
-        if(user.getUsername() == null) {
-            return Errors.NotImplemented("Username cannot be empty");
-        }
+        if(user.getUsername() == null) return EmptyError("Username");
 
         // Check null password
-        if(user.getPassword() == null) {
-            return Errors.NotImplemented("Password cannot be empty");
-        }
+        if(user.getPassword() == null) return EmptyError("Password");
 
         // Check null email
-        if(user.getEmail() == null) {
-            return Errors.NotImplemented("Email cannot be empty");
-        }
+        if(user.getEmail() == null) return EmptyError("Email");
 
         // Find username
         var foundUser = userRepository.findByUsername(user.getUsername());
-        if(foundUser.size() > 0) return taken("Username");
+        if(foundUser.size() > 0) return TakenError("Username");
 
         // Find email
         var foundEmail = userRepository.findByEmail(user.getEmail());
-        if(foundEmail.size() > 0) return taken("Email");
+        if(foundEmail.size() > 0) return TakenError("Email");
 
         user.setWin(0L);
         user.setLoss(0L);
@@ -147,11 +145,11 @@ public class UserController {
     public ResponseEntity<Response> updateUser(@PathVariable Long id, @RequestBody User newUser) {
         // Find username
         var foundUsername = userRepository.findByUsername(newUser.getUsername());
-        if(foundUsername.size() > 0) return taken("Username");
+        if(foundUsername.size() > 0) return TakenError("Username");
 
         // Find email
         var foundEmail = userRepository.findByEmail(newUser.getEmail());
-        if(foundEmail.size() > 0) return taken("Email");
+        if(foundEmail.size() > 0) return TakenError("Email");
 
 
         Optional<User> foundUser = userRepository.findById(id);

@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 public class Errors {
     public static ResponseEntity<Response> NotFound(String object) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                new Response("fail",  "The" + object + " was not found on the server", "")
+                new Response("fail",  "The " + object + " was not found on the server", "")
         );
     }
 
