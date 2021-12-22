@@ -1,4 +1,4 @@
-package com.KeoBuaBao.HelperClass;
+package com.KeoBuaBao.Responses;
 
 import lombok.Getter;
 import lombok.Setter;

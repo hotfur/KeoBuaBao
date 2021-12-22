@@ -1,5 +1,6 @@
 package com.KeoBuaBao.Entity;
 
+import com.KeoBuaBao.Utility.DateUtilis;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -17,11 +18,11 @@ public class SingleGame {
     private Long id;
 
     private String player;
-    private String dateTime;
+    private String dateTime = DateUtilis.getCurrentDate();
     private Long timePerMove;
     private Long numberOfRounds;
     private Long difficulty;
-    private String result;
-    private String moves; // The field cannot be the list. Change to String by comma delimeter.
-    private String computerMoves;
+    private String result = "";
+    private String moves = ""; // The field cannot be the list. Change to String by comma delimiter.
+    private String computerMoves = "";
 }

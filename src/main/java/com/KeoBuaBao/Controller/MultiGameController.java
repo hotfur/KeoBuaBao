@@ -3,13 +3,11 @@ package com.KeoBuaBao.Controller;
 import com.KeoBuaBao.Entity.*;
 
 import com.KeoBuaBao.HelperClass.*;
+import com.KeoBuaBao.Responses.*;
 import com.KeoBuaBao.Repository.MultiGameRepository;
 import com.KeoBuaBao.Repository.PlayerMultiGameRepository;
 import com.KeoBuaBao.Repository.RoomRepository;
 import com.KeoBuaBao.Repository.UserRepository;
-import com.KeoBuaBao.Responses.Errors;
-import com.KeoBuaBao.Responses.Success;
-import com.KeoBuaBao.Utility.DateUtilis;
 import com.KeoBuaBao.Utility.DetermineResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -52,11 +50,8 @@ public class MultiGameController {
         User host = foundHost.get(0);
 
         MultiGame multiGame = new MultiGame();
-        multiGame.setDateTime(DateUtilis.getCurrentDate());
         multiGame.setTimePerMove(host.getTimePerMove());
         multiGame.setNumberRounds(host.getNumberRound());
-        multiGame.setResultOne("");
-        multiGame.setResultTwo("");
 
         User Player1 = userRepository.findByUsername(currentRoom.getPlayerOne()).get(0);
         User Player2 = userRepository.findByUsername(currentRoom.getPlayerTwo()).get(0);

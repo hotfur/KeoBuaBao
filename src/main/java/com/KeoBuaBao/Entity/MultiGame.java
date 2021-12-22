@@ -1,5 +1,6 @@
 package com.KeoBuaBao.Entity;
 
+import com.KeoBuaBao.Utility.DateUtilis;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
@@ -19,9 +20,9 @@ public class MultiGame {
     @JsonIgnore
     private List<PlayerMultiGame> PlayerMultiGame = new ArrayList<PlayerMultiGame>();
 
-    private String dateTime;
+    private String dateTime = DateUtilis.getCurrentDate();
     private Long timePerMove;
     private Long numberRounds;
-    private String resultOne;
-    private String resultTwo;
+    private String resultOne = "";
+    private String resultTwo = "";
 }

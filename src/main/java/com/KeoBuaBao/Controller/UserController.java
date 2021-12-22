@@ -1,9 +1,7 @@
 package com.KeoBuaBao.Controller;
 
-import com.KeoBuaBao.Responses.Errors;
-import com.KeoBuaBao.HelperClass.Response;
+import com.KeoBuaBao.Responses.*;
 import com.KeoBuaBao.Entity.User;
-import com.KeoBuaBao.Responses.Success;
 import com.KeoBuaBao.Repository.UserRepository;
 import com.KeoBuaBao.Utility.RandomUtilis;
 import com.KeoBuaBao.Utility.SecurityUtils;

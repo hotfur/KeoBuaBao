@@ -5,9 +5,7 @@ import com.KeoBuaBao.Entity.User;
 import com.KeoBuaBao.HelperClass.*;
 import com.KeoBuaBao.Repository.SingleGameRepository;
 import com.KeoBuaBao.Repository.UserRepository;
-import com.KeoBuaBao.Responses.Errors;
-import com.KeoBuaBao.Responses.Success;
-import com.KeoBuaBao.Utility.DateUtilis;
+import com.KeoBuaBao.Responses.*;
 import com.KeoBuaBao.Utility.DetermineResult;
 import com.KeoBuaBao.Utility.RandomUtilis;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,13 +45,9 @@ public class SingleGameController {
 
         SingleGame newSingleGame = new SingleGame();
         newSingleGame.setPlayer(foundUsername.get(0).getUsername());
-        newSingleGame.setDateTime(DateUtilis.getCurrentDate());
         newSingleGame.setTimePerMove(foundUsername.get(0).getTimePerMove());
         newSingleGame.setNumberOfRounds(foundUsername.get(0).getNumberRound());
         newSingleGame.setDifficulty(foundUsername.get(0).getDifficulty());
-        newSingleGame.setResult("");
-        newSingleGame.setMoves("");
-        newSingleGame.setComputerMoves("");
         singleGameRepository.save(newSingleGame);
 
         return Success.WithData("New game is successfully added", newSingleGame);
