@@ -3,10 +3,11 @@ package com.KeoBuaBao.HelperClass;
 import lombok.Getter;
 import lombok.Setter;
 
+@Getter @Setter
 public class Response {
-    @Getter @Setter private String status;
-    @Getter @Setter private String message;
-    @Getter @Setter private Object data;
+    private String status;
+    private String message;
+    private Object data;
 
     public Response(String status, String message, Object data) {
         this.status = status;

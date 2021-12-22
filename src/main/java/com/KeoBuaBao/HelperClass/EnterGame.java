@@ -3,7 +3,8 @@ package com.KeoBuaBao.HelperClass;
 import lombok.Getter;
 import lombok.Setter;
 
+@Setter @Getter
 public class EnterGame {
-    @Getter @Setter private String username;
-    @Getter @Setter private int playerPosition;
+    private String username;
+    private int playerPosition;
 }

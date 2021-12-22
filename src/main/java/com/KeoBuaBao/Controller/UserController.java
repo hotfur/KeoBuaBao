@@ -1,12 +1,13 @@
 package com.KeoBuaBao.Controller;
 
+import com.KeoBuaBao.Responses.Errors;
 import com.KeoBuaBao.HelperClass.Response;
 import com.KeoBuaBao.Entity.User;
+import com.KeoBuaBao.Responses.Success;
 import com.KeoBuaBao.Repository.UserRepository;
 import com.KeoBuaBao.Utility.RandomUtilis;
 import com.KeoBuaBao.Utility.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +20,12 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
+    //Tell if an object is already taken
+    private static ResponseEntity<Response> taken(String object) {
+        return Errors.NotImplemented(object + " is already taken");
+    }
+    //Tell
+
     // API get all users
     @GetMapping("")
     public List<User> getAllUsers() {
@@ -29,16 +36,8 @@ public class UserController {
     @GetMapping("{id}")
     public ResponseEntity<Response> getOneUser(@PathVariable long id) {
         Optional<User> foundUser = userRepository.findById(id);
-        if(foundUser.isPresent()) {
-            return ResponseEntity.status(HttpStatus.OK).body(
-                    new Response("ok", "This user is found", foundUser)
-            );
-        }
-        else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new Response("fail", "Cannot find user with id = " + id, "")
-            );
-        }
+        if(foundUser.isPresent()) return Success.WithData("This user is found", foundUser);
+        else return Errors.NotFound("user");
     }
 
     // API insert user
@@ -46,40 +45,26 @@ public class UserController {
     public ResponseEntity<Response> addUser(@RequestBody User user) {
         // Check null username
         if(user.getUsername() == null) {
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
-                    new Response("fail", "Username cannot be empty", "")
-            );
+            return Errors.NotImplemented("Username cannot be empty");
         }
 
         // Check null password
         if(user.getPassword() == null) {
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
-                    new Response("fail", "Password cannot be empty", "")
-            );
+            return Errors.NotImplemented("Password cannot be empty");
         }
 
         // Check null email
         if(user.getEmail() == null) {
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
-                    new Response("fail", "Email cannot be empty", "")
-            );
+            return Errors.NotImplemented("Email cannot be empty");
         }
 
         // Find username
         var foundUser = userRepository.findByUsername(user.getUsername());
-        if(foundUser.size() > 0) {
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
-                    new Response("fail", "Username is already taken", "")
-            );
-        }
+        if(foundUser.size() > 0) return taken("Username");
 
         // Find email
         var foundEmail = userRepository.findByEmail(user.getEmail());
-        if(foundEmail.size() > 0) {
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
-                    new Response("fail", "Email is already taken", "")
-            );
-        }
+        if(foundEmail.size() > 0) return taken("Email");
 
         user.setWin(0L);
         user.setLoss(0L);
@@ -101,13 +86,10 @@ public class UserController {
             user.setDifficulty(RandomUtilis.getRandom(1L, 10L));
 
         // Hash the password
-        String hashedPassword = SecurityUtils.hashPassword(user.getPassword());
-        user.setPassword(hashedPassword);
+        user.setPassword(SecurityUtils.hashPassword(user.getPassword()));
         userRepository.save(user);
 
-        return ResponseEntity.status(HttpStatus.OK).body(
-                new Response("ok", "Add user successfully", userRepository.save(user))
-        );
+        return Success.WithData("Add user successfully", user);
     }
 
 //    // API update (upsert): Update if found, otherwise insert
@@ -165,25 +147,15 @@ public class UserController {
     public ResponseEntity<Response> updateUser(@PathVariable Long id, @RequestBody User newUser) {
         // Find username
         var foundUsername = userRepository.findByUsername(newUser.getUsername());
-        if(foundUsername.size() > 0) {
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
-                    new Response("fail", "Username is already taken", "")
-            );
-        }
+        if(foundUsername.size() > 0) return taken("Username");
 
         // Find email
         var foundEmail = userRepository.findByEmail(newUser.getEmail());
-        if(foundEmail.size() > 0) {
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
-                    new Response("fail", "Email is already taken", "")
-            );
-        }
+        if(foundEmail.size() > 0) return taken("Email");
+
 
         Optional<User> foundUser = userRepository.findById(id);
-        if(!foundUser.isPresent())
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
-                    new Response("fail", "Cannot find the user", "")
-            );
+        if(!foundUser.isPresent()) return Errors.NotFound("user");
 
         User currentUser = foundUser.get();
 
@@ -194,12 +166,6 @@ public class UserController {
             currentUser.setEmail(newUser.getEmail());
         if(newUser.getPassword() != null)
             currentUser.setPassword(SecurityUtils.hashPassword(newUser.getPassword()));
-        if(newUser.getWin() != null)
-            currentUser.setWin(newUser.getWin());
-        if(newUser.getTie() != null)
-            currentUser.setTie(newUser.getTie());
-        if(newUser.getLoss() != null)
-            currentUser.setLoss(newUser.getLoss());
         if(newUser.getAvatar() != null)
             currentUser.setAvatar(newUser.getAvatar());
         if(newUser.getSkinColor() != null)
@@ -210,35 +176,18 @@ public class UserController {
             currentUser.setNumberRound(newUser.getNumberRound());
         if(newUser.getDifficulty() != null)
             currentUser.setDifficulty(newUser.getDifficulty());
-        if(newUser.getRoomId() != null)
-            currentUser.setRoomId(newUser.getRoomId());
-        if(newUser.getStatus() != null)
-            currentUser.setStatus(newUser.getStatus());
-        if(newUser.getWinSingle() != null)
-            currentUser.setWinSingle(newUser.getWinSingle());
-        if(newUser.getDrawSingle() != null)
-            currentUser.setDrawSingle(newUser.getDrawSingle());
-        if(newUser.getLostSingle() != null)
-            currentUser.setLostSingle(newUser.getLostSingle());
 
         userRepository.save(currentUser); // Save the updated record to the database
-        return ResponseEntity.status(HttpStatus.OK).body(
-                new Response("ok", "Update user successfully", currentUser)
-        );
+        return Success.WithData("Update user successfully", currentUser);
     }
 
     // API delete user
     @DeleteMapping("/{id}")
     public ResponseEntity<Response> deleteUser(@PathVariable Long id) {
-        boolean exists = userRepository.existsById(id);
-        if(exists) {
+        if(userRepository.existsById(id)) {
             userRepository.deleteById(id);
-            return ResponseEntity.status(HttpStatus.OK).body(
-                    new Response("ok", "Delete user successfully", "")
-            );
+            return Success.NoData("Delete user successfully");
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                new Response("fail", "Cannot find the user to delete", "")
-        );
+        return Errors.NotFound("user");
     }
 }

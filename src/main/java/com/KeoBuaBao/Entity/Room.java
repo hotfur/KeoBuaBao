@@ -1,6 +1,7 @@
 package com.KeoBuaBao.Entity;
 
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.Entity;
@@ -10,16 +11,16 @@ import javax.persistence.Id;
 
 // This room for now is available for only two players
 @Entity
+@Setter @Getter @RequiredArgsConstructor()
 public class Room {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Getter
     private Long id;
 
-    @Getter @Setter private String host;
-    @Getter @Setter private String players;
-    @Getter @Setter private String disconnectedPlayers;
-    @Getter @Setter private String timersSinceDisconnected;
-    @Getter @Setter private String playerOne;
-    @Getter @Setter private String playerTwo;
+    private String host;
+    private String players = "";
+    private String disconnectedPlayers = "";
+    private String timersSinceDisconnected = "";
+    private String playerOne = "";
+    private String playerTwo = "";
 }

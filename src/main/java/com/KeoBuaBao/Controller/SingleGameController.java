@@ -1,12 +1,12 @@
 package com.KeoBuaBao.Controller;
 
-import com.KeoBuaBao.HelperClass.DetailResult;
-import com.KeoBuaBao.HelperClass.Move;
-import com.KeoBuaBao.HelperClass.Response;
 import com.KeoBuaBao.Entity.SingleGame;
 import com.KeoBuaBao.Entity.User;
+import com.KeoBuaBao.HelperClass.*;
 import com.KeoBuaBao.Repository.SingleGameRepository;
 import com.KeoBuaBao.Repository.UserRepository;
+import com.KeoBuaBao.Responses.Errors;
+import com.KeoBuaBao.Responses.Success;
 import com.KeoBuaBao.Utility.DateUtilis;
 import com.KeoBuaBao.Utility.DetermineResult;
 import com.KeoBuaBao.Utility.RandomUtilis;
@@ -34,32 +34,16 @@ public class SingleGameController {
     @GetMapping("/{id}")
     public ResponseEntity<Response> getOnePlayerSingleGame(@PathVariable Long id) {
         Optional<SingleGame> foundUserGame = singleGameRepository.findById(id);
-        if(foundUserGame.isPresent()) {
-            return ResponseEntity.status(HttpStatus.OK).body(
-                    new Response("ok", "Here is all of the game from the use" , foundUserGame)
-            );
-        }
-        else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new Response("fail", "Cannot find the user", "")
-            );
-        }
+        if(foundUserGame.isPresent()) return Success.WithData("Here is all of the game from the use" , foundUserGame);
+        else return Errors.NotFound("user");
     }
 
     @PostMapping("")
     public ResponseEntity<Response> createSingleGame(@RequestBody User user) {
-        if (user.getUsername() == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new Response("fail", "Username cannot be empty", "")
-            );
-        }
+        if (user.getUsername() == null) return Errors.NotFound("user");
 
         List<User> foundUsername = userRepository.findByUsername(user.getUsername());
-        if (foundUsername.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new Response("fail", "Cannot find the user", "")
-            );
-        }
+        if (foundUsername.isEmpty()) return Errors.NotFound("user");
 
         SingleGame newSingleGame = new SingleGame();
         newSingleGame.setPlayer(foundUsername.get(0).getUsername());
@@ -72,25 +56,16 @@ public class SingleGameController {
         newSingleGame.setComputerMoves("");
         singleGameRepository.save(newSingleGame);
 
-        return ResponseEntity.status(HttpStatus.OK).body(
-                new Response("ok", "New game is successfully added", "")
-        );
+        return Success.WithData("New game is successfully added", newSingleGame);
     }
 
     @PostMapping("/{gameID}")
     public ResponseEntity<Response> playWithComputer(@PathVariable long gameID, @RequestBody Move playerMove) {
         long computerMove = RandomUtilis.getRandom(1L, 3L);
         Optional<SingleGame> foundSingleGame = singleGameRepository.findById(gameID);
-        if(!foundSingleGame.isPresent())
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new Response("fail", "Cannot find the game belong to the user", "")
-            );
+        if(!foundSingleGame.isPresent()) return Errors.NotFound("game belong to the user");
 
-        if(playerMove.getMove() < 1 || playerMove.getMove() > 3) {
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
-                    new Response("fail", "Illegal move", "")
-            );
-        }
+        if(playerMove.getMove() < 1 || playerMove.getMove() > 3) return Errors.NotImplemented("Illegal move");
 
         SingleGame currentSingleGame = foundSingleGame.get();
         if(currentSingleGame.getResult().length() >= currentSingleGame.getNumberOfRounds()) {
@@ -109,7 +84,7 @@ public class SingleGameController {
 
             DetailResult detailResult = new DetailResult(countWin, countDraw, countLose);
 
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
                     new Response("done", "Game over!", detailResult)
             );
         }
@@ -119,8 +94,8 @@ public class SingleGameController {
         var resultList = DetermineResult.announceResult(playerMove.getMove(), computerMove);
 
         SingleGame singleGame = foundSingleGame.get();
-        singleGame.setMoves(singleGame.getMoves() + Long.toString(playerMove.getMove()));
-        singleGame.setComputerMoves(singleGame.getComputerMoves() + Long.toString(computerMove));
+        singleGame.setMoves(singleGame.getMoves() + playerMove.getMove());
+        singleGame.setComputerMoves(singleGame.getComputerMoves() + computerMove);
         singleGame.setResult(singleGame.getResult() + resultList.get(0));
         singleGameRepository.save(singleGame);
 
@@ -131,9 +106,7 @@ public class SingleGameController {
             currentUser.setWinSingle(currentUser.getWinSingle() + 1);
             userRepository.save(currentUser);
 
-            return ResponseEntity.status(HttpStatus.OK).body(
-                    new Response("ok", "This move is successfully sent. Congratulation! You have won this round!", computerMove)
-            );
+            return Success.WithData("Congratulation! You have won this round!", computerMove);
         }
 
         // Losing case: Player loses computer
@@ -143,9 +116,7 @@ public class SingleGameController {
             currentUser.setLostSingle(currentUser.getLostSingle() + 1);
             userRepository.save(currentUser);
 
-            return ResponseEntity.status(HttpStatus.OK).body(
-                    new Response("ok", "This move is successfully sent. Unfortunately, the computer has beaten you!", computerMove)
-            );
+            return Success.WithData("Unfortunately, the computer has beaten you!", computerMove);
         }
 
         // Game draw
@@ -155,9 +126,7 @@ public class SingleGameController {
             currentUser.setDrawSingle(currentUser.getDrawSingle() + 1);
             userRepository.save(currentUser);
 
-            return ResponseEntity.status(HttpStatus.OK).body(
-                    new Response("ok", "This move is successfully sent. The game results in a draw!", computerMove)
-            );
+            return Success.WithData("The game results in a draw!", computerMove);
         }
 
 

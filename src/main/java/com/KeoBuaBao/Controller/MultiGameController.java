@@ -2,17 +2,16 @@ package com.KeoBuaBao.Controller;
 
 import com.KeoBuaBao.Entity.*;
 
-import com.KeoBuaBao.HelperClass.GameAndUserID;
-import com.KeoBuaBao.HelperClass.MultiplayerMove;
-import com.KeoBuaBao.HelperClass.Response;
+import com.KeoBuaBao.HelperClass.*;
 import com.KeoBuaBao.Repository.MultiGameRepository;
 import com.KeoBuaBao.Repository.PlayerMultiGameRepository;
 import com.KeoBuaBao.Repository.RoomRepository;
 import com.KeoBuaBao.Repository.UserRepository;
+import com.KeoBuaBao.Responses.Errors;
+import com.KeoBuaBao.Responses.Success;
 import com.KeoBuaBao.Utility.DateUtilis;
 import com.KeoBuaBao.Utility.DetermineResult;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +22,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/multiplayer")
-public class MutiGameController {
+public class MultiGameController {
     @Autowired
     private MultiGameRepository multiGameRepository;
     @Autowired
@@ -42,17 +41,11 @@ public class MutiGameController {
     @PostMapping("/{roomID}")
     public ResponseEntity<Response> createMutiplayer(@PathVariable Long roomID) {
         Optional<Room> foundRoom = roomRepository.findById(roomID);
-        if(!foundRoom.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new Response("fail", "Cannot find the room", "")
-            );
-        }
+        if(!foundRoom.isPresent()) return Errors.NotFound("room");
 
         Room currentRoom = foundRoom.get();
         if(currentRoom.getPlayerOne() == null || currentRoom.getPlayerTwo() == null) {
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
-                    new Response("fail", "Not enough players to start", "")
-            );
+            return Errors.NotImplemented("Not enough players to start");
         }
 
         var foundHost = userRepository.findByUsername(currentRoom.getHost());
@@ -92,82 +85,58 @@ public class MutiGameController {
         userRepository.save(Player1);
         userRepository.save(Player2);
 
-        return ResponseEntity.status(HttpStatus.OK).body(
-                    new Response("ok", "Create game successfully" , multiGame)
-        );
+        return Success.WithData("Create game successfully", multiGame);
     }
 
     // API to get the player from a match
     @GetMapping("/{gameID}")
     public ResponseEntity<Response> getPlayerFromMatch(@PathVariable Long gameID) {
         Optional<MultiGame> foundMultiGame = multiGameRepository.findById(gameID);
-        if(!foundMultiGame.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new Response("fail", "Cannot found the game", "")
-            );
-        }
+        if(!foundMultiGame.isPresent()) return Errors.NotFound("game");
 
         MultiGame currentMultigame = foundMultiGame.get();
         var playerMultiGameList = currentMultigame.getPlayerMultiGame();
         var usernameList = new ArrayList<String>();
 
-        for(int i = 0; i < playerMultiGameList.size(); i++) {
-            User currentUser = playerMultiGameList.get(i).getUser();
+        for (PlayerMultiGame playerMultiGame : playerMultiGameList) {
+            User currentUser = playerMultiGame.getUser();
             String username = currentUser.getUsername();
             usernameList.add(username);
         }
 
-        return ResponseEntity.status(HttpStatus.OK).body(
-                new Response("ok", "Here is the players belong to the match" , usernameList)
-        );
+        return Success.WithData("Here is the players belong to the match", usernameList);
     }
 
 
     @PostMapping("/playMultiplayer/{gameID}")
     public ResponseEntity<Response> playOnline(@PathVariable long gameID, @RequestBody MultiplayerMove playerMove) {
         Optional<MultiGame> foundMultiGame = multiGameRepository.findById(gameID);
-        if(!foundMultiGame.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new Response("fail", "Cannot found the game", "")
-            );
-        }
+        if(!foundMultiGame.isPresent()) return Errors.NotFound("game");
 
         if(playerMove.getMove() < 1 || playerMove.getMove() > 3) {
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
-                    new Response("fail", "Illegal move", "")
-            );
+            return Errors.NotImplemented("Illegal move");
         }
 
         MultiGame currentMultigame = foundMultiGame.get();
         if(currentMultigame.getResultOne().length() >= currentMultigame.getNumberRounds()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new Response("done", "Game over!", "")
-            );
+            return Errors.NotImplemented("The game is over!");
         }
 
 
         var playerMultiGameList = currentMultigame.getPlayerMultiGame();
         var usernameList = new ArrayList<String>();
 
-        for(int i = 0; i < playerMultiGameList.size(); i++) {
-            User currentUser = playerMultiGameList.get(i).getUser();
+        for (PlayerMultiGame playerMultiGame : playerMultiGameList) {
+            User currentUser = playerMultiGame.getUser();
             String username = currentUser.getUsername();
             usernameList.add(username);
         }
 
-        if(!usernameList.contains(playerMove.getUsername())) {
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
-                    new Response("fail", "You are not in the game", "")
-            );
-        }
+        if(!usernameList.contains(playerMove.getUsername())) return Errors.NotImplemented("You are not in the game");
 
-        int playerPosition = -1;
-        if(playerMove.getUsername().equals(usernameList.get(0))) {
-            playerPosition = 0;
-        }
-        else {
-            playerPosition = 1;
-        }
+        int playerPosition;
+        if(playerMove.getUsername().equals(usernameList.get(0))) playerPosition = 0;
+        else playerPosition = 1;
 
 
         var currentPlayerMultiGame = playerMultiGameList.get(playerPosition);
@@ -176,18 +145,14 @@ public class MutiGameController {
         int opponentPlayer_MoveNumber = opponentPlayerMultiGame.getMoves().length();
 
         if (currentPlayer_MoveNumber > opponentPlayer_MoveNumber) {
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
-                    new Response("fail", "Please wait for the opponent to make a move", "")
-            );
+            return Errors.NotImplemented("Please wait for the opponent to make a move");
         }
 
         currentPlayerMultiGame.setMoves(currentPlayerMultiGame.getMoves() + playerMove.getMove());
         PlayerMultiGameRepository.save(currentPlayerMultiGame);
 
         if (currentPlayer_MoveNumber + 1 > opponentPlayer_MoveNumber) {
-            return ResponseEntity.status(HttpStatus.OK).body(
-                    new Response("OK", "Send move success! Please wait for the opponent to make a move", "")
-            );
+            return Success.NoData("Send move success! Please wait for the opponent to make a move");
         }
         else {
             String player1moves = playerMultiGameList.get(0).getMoves();
@@ -199,9 +164,7 @@ public class MutiGameController {
             currentMultigame.setResultOne(currentMultigame.getResultOne() + resultList.get(0));
             currentMultigame.setResultTwo(currentMultigame.getResultTwo() + resultList.get(1));
             multiGameRepository.save(currentMultigame);
-            return ResponseEntity.status(HttpStatus.OK).body(
-                    new Response("OK", "Send move success! Please wait for the round to end", "")
-            );
+            return Success.NoData("Send move success! Please wait for the round to end");
         }
     }
 
@@ -209,55 +172,34 @@ public class MutiGameController {
     public ResponseEntity<Response> getRoundResultMultiplayer(@RequestBody GameAndUserID id) {
 
         Optional<MultiGame> foundMultigame = multiGameRepository.findById(id.getGameID());
-        if(!foundMultigame.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new Response("fail", "Cannot found the game", "")
-            );
-        }
+        if (!foundMultigame.isPresent()) return Errors.NotFound("game");
 
         Optional<User> foundUser = userRepository.findById(id.getUserID());
-        if(!foundUser.isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new Response("fail", "Username does not exist", "")
-            );
-        }
+        if (!foundUser.isPresent()) return Errors.NotFound("user");
 
         int playerPosition = -1;
         User currentUser = foundUser.get();
 
         MultiGame currentMultigame = foundMultigame.get();
         var playerMultiGameList = currentMultigame.getPlayerMultiGame();
-        for(int i = 0; i < playerMultiGameList.size(); i++) {
+        for (int i = 0; i < playerMultiGameList.size(); i++) {
             User tempUser = playerMultiGameList.get(i).getUser();
-            if(tempUser.getUsername().equals(currentUser.getUsername()))
+            if (tempUser.getUsername().equals(currentUser.getUsername()))
                 playerPosition = i;
         }
 
-        if(playerPosition == -1) {
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
-                    new Response("fail", "You are not in the game", "")
-            );
-        }
-        
-        String result = "";
-        if(playerPosition == 0)
-            result = currentMultigame.getResultOne();
-        else
-            result = currentMultigame.getResultTwo();
+        if (playerPosition == -1) return Errors.NotImplemented("You are not in the game");
 
-        if(result.charAt(result.length() - 1) == '+')
-            return ResponseEntity.status(HttpStatus.OK).body(
-                    new Response("OK", "Congratulation! You have won this round!", "")
-            );
+        String result;
+        if (playerPosition == 0) result = currentMultigame.getResultOne();
+        else result = currentMultigame.getResultTwo();
 
-        else if(result.charAt(result.length() - 1) == '-')
-            return ResponseEntity.status(HttpStatus.OK).body(
-                    new Response("OK", "Unfortunately, the opponent has beaten you!t", "")
-            );
+        if (result.charAt(result.length() - 1) == '+')
+            return Success.NoData("Congratulation! You have won this round!");
 
-        else
-            return ResponseEntity.status(HttpStatus.OK).body(
-                    new Response("OK", "The game results in a draw!", "")
-            );
+        else if (result.charAt(result.length() - 1) == '-')
+            return Success.NoData("Unfortunately, the opponent has beaten you!");
+
+        else return Success.NoData("The game results in a draw!");
     }
 }

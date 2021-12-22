@@ -3,10 +3,11 @@ package com.KeoBuaBao.HelperClass;
 import lombok.Getter;
 import lombok.Setter;
 
+@Setter @Getter
 public class DetailResult {
-    @Getter @Setter private Long win;
-    @Getter @Setter private Long draw;
-    @Getter @Setter private Long lose;
+    private Long win;
+    private Long draw;
+    private Long lose;
 
     public DetailResult() {
         this.win = 0L;

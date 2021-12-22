@@ -3,7 +3,8 @@ package com.KeoBuaBao.HelperClass;
 import lombok.Getter;
 import lombok.Setter;
 
+@Setter @Getter
 public class GameAndUserID {
-    @Getter @Setter private Long gameID;
-    @Getter @Setter private Long userID;
+    private Long gameID;
+    private Long userID;
 }
