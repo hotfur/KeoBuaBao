@@ -5,12 +5,11 @@ import java.util.List;
 
 public class Test {
     public static void main(String[] args) {
-        List<String> a = new ArrayList<>();
-        a.add("a");
-        a.add("b");
-        a.add("c");
-        System.out.println(a);
-        a.remove(0);
-        System.out.println(a);
+        String username = "thuankent";
+        String password = "123";
+        String dateTime = DateUtilis.getCurrentDate();
+        System.out.println(dateTime);
+        String token = SecurityUtils.generateToken(username, SecurityUtils.hashPassword(password), dateTime);
+        System.out.println(token);
     }
 }
