@@ -1,8 +1,10 @@
 package com.KeoBuaBao.Controller;
 
+import com.KeoBuaBao.HelperClass.Move;
 import com.KeoBuaBao.Responses.*;
 import com.KeoBuaBao.Entity.User;
 import com.KeoBuaBao.Repository.UserRepository;
+import com.KeoBuaBao.Utility.DateUtilis;
 import com.KeoBuaBao.Utility.RandomUtilis;
 import com.KeoBuaBao.Utility.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +30,7 @@ public class UserController {
     }
 
 
-    // API get all users
+    // API get all users: For admin only
     @GetMapping("")
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -46,21 +48,26 @@ public class UserController {
     @PostMapping("")
     public ResponseEntity<Response> addUser(@RequestBody User user) {
         // Check null username
-        if(user.getUsername() == null) return EmptyError("Username");
+        if(user.getUsername() == null)
+            return EmptyError("Username");
 
         // Check null password
-        if(user.getPassword() == null) return EmptyError("Password");
+        if(user.getPassword() == null)
+            return EmptyError("Password");
 
         // Check null email
-        if(user.getEmail() == null) return EmptyError("Email");
+        if(user.getEmail() == null)
+            return EmptyError("Email");
 
         // Find username
         var foundUser = userRepository.findByUsername(user.getUsername());
-        if(foundUser.size() > 0) return TakenError("Username");
+        if(foundUser.size() > 0)
+            return TakenError("Username");
 
         // Find email
         var foundEmail = userRepository.findByEmail(user.getEmail());
-        if(foundEmail.size() > 0) return TakenError("Email");
+        if(foundEmail.size() > 0)
+            return TakenError("Email");
 
         user.setWin(0L);
         user.setLoss(0L);
@@ -83,64 +90,22 @@ public class UserController {
 
         // Hash the password
         user.setPassword(SecurityUtils.hashPassword(user.getPassword()));
+        user.setStatus(DateUtilis.getCurrentDate());
         userRepository.save(user);
 
         return Success.WithData("Add user successfully", user);
     }
 
-//    // API update (upsert): Update if found, otherwise insert
-//    @PutMapping("/{id}")
-//    public ResponseEntity<Response> updateUser(@PathVariable long id, @RequestBody User newUser) {
-//        // Check null username
-//        if(newUser.getUsername() == null) {
-//            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
-//                    new Response("fail", "Username cannot be empty", "")
-//            );
-//        }
-//
-//        // Check null password
-//        if(newUser.getPassword() == null) {
-//            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
-//                    new Response("fail", "Password cannot be empty", "")
-//            );
-//        }
-//
-//        // Check null email
-//        if(newUser.getEmail() == null) {
-//            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
-//                    new Response("fail", "Email cannot be empty", "")
-//            );
-//        }
-//
-//        User updatedUser = userRepository.findById(id)
-//                .map(user -> {
-//                    user.setUsername(newUser.getUsername());
-//                    user.setPassword(SecurityUtils.hashPassword(user.getPassword()));
-//                    user.setWin(newUser.getWin());
-//                    user.setTie(newUser.getTie());
-//                    user.setLoss(newUser.getLoss());
-//                    user.setAvatar(newUser.getAvatar());
-//                    user.setSkinColor(newUser.getSkinColor());
-//                    user.setTimePerMove(newUser.getTimePerMove());
-//                    user.setNumberRound(newUser.getNumberRound());
-//                    user.setDifficulty(newUser.getDifficulty());
-//                    user.setRoomId(newUser.getRoomId());
-//                    user.setStatus(newUser.getStatus());
-//                    user.setWinSingle(newUser.getWinSingle());
-//                    user.setDrawSingle(newUser.getDrawSingle());
-//                    user.setLostSingle(newUser.getLostSingle());
-//                    return userRepository.save(user);
-//                }).orElseGet(() -> {
-//                    newUser.setId(id);
-//                    return userRepository.save(newUser);
-//                });
-//        return ResponseEntity.status(HttpStatus.OK).body(
-//                new Response("ok", "Update user successfully", updatedUser)
-//        );
-//    }
-
     @PutMapping("/{id}")
     public ResponseEntity<Response> updateUser(@PathVariable Long id, @RequestBody User newUser) {
+        // Check null token
+        if(newUser.getToken() == null)
+            return Errors.NotImplemented("Token cannot be null");
+
+        // Check null datetime
+        if(newUser.getStatus() == null)
+            return Errors.NotImplemented("Datetime cannot be null");
+
         // Find username
         var foundUsername = userRepository.findByUsername(newUser.getUsername());
         if(foundUsername.size() > 0) return TakenError("Username");
@@ -149,11 +114,15 @@ public class UserController {
         var foundEmail = userRepository.findByEmail(newUser.getEmail());
         if(foundEmail.size() > 0) return TakenError("Email");
 
-
         Optional<User> foundUser = userRepository.findById(id);
         if(!foundUser.isPresent()) return Errors.NotFound("user");
 
         User currentUser = foundUser.get();
+        // Check equal token
+        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), newUser.getStatus());
+        if(!serverToken.equals(newUser.getToken()))
+            return Errors.NotImplemented("Tokens do not match");
+        currentUser.setStatus(DateUtilis.getCurrentDate());
 
         // Update all the fields appropriately
         if(newUser.getUsername() != null)
@@ -179,11 +148,61 @@ public class UserController {
 
     // API delete user
     @DeleteMapping("/{id}")
-    public ResponseEntity<Response> deleteUser(@PathVariable Long id) {
-        if(userRepository.existsById(id)) {
-            userRepository.deleteById(id);
-            return Success.NoData("Delete user successfully");
+    public ResponseEntity<Response> deleteUser(@PathVariable Long id, @RequestBody User user) {
+        // Check null token
+        if(user.getToken() == null)
+            return Errors.NotImplemented("Token cannot be null");
+
+        // Check null datetime
+        if(user.getStatus() == null)
+            return Errors.NotImplemented("Datetime cannot be null");
+
+        Optional<User> foundUser = userRepository.findById(id);
+        if(!foundUser.isPresent())
+            return Errors.NotFound("user");
+
+        User currentUser = foundUser.get();
+        // Check equal token
+        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
+        if(!serverToken.equals(user.getToken()))
+            return Errors.NotImplemented("Tokens do not match");
+
+
+        userRepository.deleteById(id);
+        return Success.NoData("Delete user successfully");
+    }
+
+    // API log in
+    @PostMapping("/checkPassword")
+    public ResponseEntity<Response> checkPassword(@RequestBody User user) {
+        // Check null token
+        if(user.getToken() == null)
+            return Errors.NotImplemented("Token cannot be null");
+
+        // Check null datetime
+        if(user.getStatus() == null)
+            return Errors.NotImplemented("Datetime cannot be null");
+
+        List<User> foundUser = userRepository.findByUsername(user.getUsername());
+        if(foundUser.isEmpty())
+           return Errors.NotFound("username");
+
+        User currentUser = foundUser.get(0);
+        // Check equal token
+        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
+        if(!serverToken.equals(user.getToken()))
+            return Errors.NotImplemented("Tokens do not match");
+        currentUser.setStatus(DateUtilis.getCurrentDate());
+
+        List<User> foundUserList = userRepository.findByUsernameAndPassword(user.getUsername(), SecurityUtils.hashPassword(user.getPassword()));
+
+        if (foundUserList.size() > 0) {
+            User userRecord = foundUserList.get(0);
+            return Success.WithData("Correct", userRecord);
         }
-        return Errors.NotFound("user");
+
+        return Errors.NotImplemented("Incorrect username or password");
     }
 }
+
+
