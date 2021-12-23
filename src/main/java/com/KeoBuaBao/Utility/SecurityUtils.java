@@ -2,8 +2,6 @@ package com.KeoBuaBao.Utility;
 
 import javax.xml.bind.DatatypeConverter;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Locale;
 
 public class SecurityUtils {
     public static String hashPassword(String password) {
