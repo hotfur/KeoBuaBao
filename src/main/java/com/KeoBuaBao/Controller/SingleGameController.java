@@ -6,8 +6,10 @@ import com.KeoBuaBao.HelperClass.*;
 import com.KeoBuaBao.Repository.SingleGameRepository;
 import com.KeoBuaBao.Repository.UserRepository;
 import com.KeoBuaBao.Responses.*;
+import com.KeoBuaBao.Utility.DateUtilis;
 import com.KeoBuaBao.Utility.DetermineResult;
 import com.KeoBuaBao.Utility.RandomUtilis;
+import com.KeoBuaBao.Utility.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,19 +31,55 @@ public class SingleGameController {
         return singleGameRepository.findAll();
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Response> getOnePlayerSingleGame(@PathVariable Long id) {
-        Optional<SingleGame> foundUserGame = singleGameRepository.findById(id);
-        if(foundUserGame.isPresent()) return Success.WithData("Here is all of the game from the use" , foundUserGame);
-        else return Errors.NotFound("user");
+    @GetMapping("/get_player_single_game/{id}")
+    public ResponseEntity<Response> getOnePlayerSingleGame(@PathVariable Long id, @RequestBody User user) {
+        // Check null token
+        if(user.getToken() == null)
+            return Errors.NotImplemented("Token cannot be null");
+
+        // Check null datetime
+        if(user.getStatus() == null)
+            return Errors.NotImplemented("Datetime cannot be null");
+
+        Optional<User> foundUser = userRepository.findById(id);
+        if(!foundUser.isPresent())
+            return Errors.NotFound("username");
+
+        User currentUser = foundUser.get();
+        // Check equal token
+        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
+        if(!serverToken.equals(user.getToken()))
+            return Errors.NotImplemented("Tokens do not match");
+        currentUser.setStatus(DateUtilis.getCurrentDate());
+
+        List<SingleGame> foundSinglegame = singleGameRepository.findByPlayer(currentUser.getUsername());
+        if(!foundSinglegame.isEmpty())
+            return Success.WithData("Here is all of the game from the user" , foundSinglegame);
+        else
+            return Errors.NotFound("user");
     }
 
     @PostMapping("")
     public ResponseEntity<Response> createSingleGame(@RequestBody User user) {
         if (user.getUsername() == null) return Errors.NotFound("user");
 
+        // Check null token
+        if(user.getToken() == null)
+            return Errors.NotImplemented("Token cannot be null");
+
+        // Check null datetime
+        if(user.getStatus() == null)
+            return Errors.NotImplemented("Datetime cannot be null");
+
         List<User> foundUsername = userRepository.findByUsername(user.getUsername());
         if (foundUsername.isEmpty()) return Errors.NotFound("user");
+
+        User currentUser = foundUsername.get(0);
+        // Check equal token
+        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
+        if(!serverToken.equals(user.getToken()))
+            return Errors.NotImplemented("Tokens do not match");
+        currentUser.setStatus(DateUtilis.getCurrentDate());
 
         SingleGame newSingleGame = new SingleGame();
         newSingleGame.setPlayer(foundUsername.get(0).getUsername());
