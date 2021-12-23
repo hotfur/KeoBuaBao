@@ -8,7 +8,9 @@ import com.KeoBuaBao.Repository.MultiGameRepository;
 import com.KeoBuaBao.Repository.PlayerMultiGameRepository;
 import com.KeoBuaBao.Repository.RoomRepository;
 import com.KeoBuaBao.Repository.UserRepository;
+import com.KeoBuaBao.Utility.DateUtilis;
 import com.KeoBuaBao.Utility.DetermineResult;
+import com.KeoBuaBao.Utility.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,7 +39,26 @@ public class MultiGameController {
 
     // Start game API: Create a row in the table multiplayer
     @PostMapping("/{roomID}")
-    public ResponseEntity<Response> createMutiplayer(@PathVariable Long roomID) {
+    public ResponseEntity<Response> createMutiplayer(@PathVariable Long roomID, @RequestBody User user) {
+        // Check null token
+        if(user.getToken() == null) return Errors.NotImplemented("Token cannot be null");
+
+        // Check null datetime
+        if(user.getStatus() == null)
+            return Errors.NotImplemented("Datetime cannot be null");
+
+        if (user.getUsername() == null) return Errors.NotFound("user");
+
+        List<User> foundUser = userRepository.findByUsername(user.getUsername());
+        if (foundUser.isEmpty()) return Errors.NotFound("user");
+
+        User currentUser = foundUser.get(0);
+        // Check equal token
+        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
+        if(!serverToken.equals(user.getToken()))
+            return Errors.NotImplemented("Tokens do not match");
+        currentUser.setStatus(DateUtilis.getCurrentDate());
+
         Optional<Room> foundRoom = roomRepository.findById(roomID);
         if(!foundRoom.isPresent()) return Errors.NotFound("room");
 
@@ -85,7 +106,27 @@ public class MultiGameController {
 
     // API to get the player from a match
     @GetMapping("/{gameID}")
-    public ResponseEntity<Response> getPlayerFromMatch(@PathVariable Long gameID) {
+    public ResponseEntity<Response> getPlayerFromMatch(@PathVariable Long gameID, @RequestBody User user) {
+        // Check null token
+        if(user.getToken() == null)
+            return Errors.NotImplemented("Token cannot be null");
+
+        // Check null datetime
+        if(user.getStatus() == null)
+            return Errors.NotImplemented("Datetime cannot be null");
+
+        if (user.getUsername() == null) return Errors.NotFound("user");
+
+        List<User> foundUser = userRepository.findByUsername(user.getUsername());
+        if (foundUser.isEmpty()) return Errors.NotFound("user");
+
+        User currentUser0 = foundUser.get(0);
+        // Check equal token
+        String serverToken = SecurityUtils.generateToken(currentUser0.getUsername(), currentUser0.getPassword(), user.getStatus());
+        if(!serverToken.equals(user.getToken()))
+            return Errors.NotImplemented("Tokens do not match");
+        currentUser0.setStatus(DateUtilis.getCurrentDate());
+
         Optional<MultiGame> foundMultiGame = multiGameRepository.findById(gameID);
         if(!foundMultiGame.isPresent()) return Errors.NotFound("game");
 
@@ -105,6 +146,26 @@ public class MultiGameController {
 
     @PostMapping("/playMultiplayer/{gameID}")
     public ResponseEntity<Response> playOnline(@PathVariable long gameID, @RequestBody MultiplayerMove playerMove) {
+        // Check null token
+        if(playerMove.getToken() == null)
+            return Errors.NotImplemented("Token cannot be null");
+
+        // Check null datetime
+        if(playerMove.getStatus() == null)
+            return Errors.NotImplemented("Datetime cannot be null");
+
+        if (playerMove.getUsername() == null) return Errors.NotFound("user");
+
+        List<User> foundUser = userRepository.findByUsername(playerMove.getUsername());
+        if (foundUser.isEmpty()) return Errors.NotFound("user");
+
+        User currentUser0 = foundUser.get(0);
+        // Check equal token
+        String serverToken = SecurityUtils.generateToken(currentUser0.getUsername(), currentUser0.getPassword(), playerMove.getStatus());
+        if(!serverToken.equals(playerMove.getToken()))
+            return Errors.NotImplemented("Tokens do not match");
+        currentUser0.setStatus(DateUtilis.getCurrentDate());
+
         Optional<MultiGame> foundMultiGame = multiGameRepository.findById(gameID);
         if(!foundMultiGame.isPresent()) return Errors.NotFound("game");
 
@@ -164,16 +225,32 @@ public class MultiGameController {
     }
 
     @PostMapping("/get_round_result")
-    public ResponseEntity<Response> getRoundResultMultiplayer(@RequestBody GameAndUserID id) {
+    public ResponseEntity<Response> getRoundResultMultiplayer(@RequestBody GameIDAndUsername user) {
 
-        Optional<MultiGame> foundMultigame = multiGameRepository.findById(id.getGameID());
+        // Check null token
+        if(user.getToken() == null)
+            return Errors.NotImplemented("Token cannot be null");
+
+        // Check null datetime
+        if(user.getStatus() == null)
+            return Errors.NotImplemented("Datetime cannot be null");
+
+        if (user.getUsername() == null) return Errors.NotFound("user");
+
+        List<User> foundUser = userRepository.findByUsername(user.getUsername());
+        if (foundUser.isEmpty()) return Errors.NotFound("user");
+
+        User currentUser = foundUser.get(0);
+        // Check equal token
+        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
+        if(!serverToken.equals(user.getToken()))
+            return Errors.NotImplemented("Tokens do not match");
+        currentUser.setStatus(DateUtilis.getCurrentDate());
+
+        Optional<MultiGame> foundMultigame = multiGameRepository.findById(user.getGameID());
         if (!foundMultigame.isPresent()) return Errors.NotFound("game");
 
-        Optional<User> foundUser = userRepository.findById(id.getUserID());
-        if (!foundUser.isPresent()) return Errors.NotFound("user");
-
         int playerPosition = -1;
-        User currentUser = foundUser.get();
 
         MultiGame currentMultigame = foundMultigame.get();
         var playerMultiGameList = currentMultigame.getPlayerMultiGame();

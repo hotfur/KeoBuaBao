@@ -93,6 +93,26 @@ public class SingleGameController {
 
     @PostMapping("/{gameID}")
     public ResponseEntity<Response> playWithComputer(@PathVariable long gameID, @RequestBody Move playerMove) {
+
+        // Check null token
+        if(playerMove.getToken() == null)
+            return Errors.NotImplemented("Token cannot be null");
+
+        // Check null datetime
+        if(playerMove.getStatus() == null)
+            return Errors.NotImplemented("Datetime cannot be null");
+
+        List<User> foundUser = userRepository.findByUsername(playerMove.getUsername());
+        if(foundUser.isEmpty())
+            return Errors.NotFound("user");
+
+        User currentUser = foundUser.get(0);
+        // Check equal token
+        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), playerMove.getStatus());
+        if(!serverToken.equals(playerMove.getToken()))
+            return Errors.NotImplemented("Tokens do not match");
+        currentUser.setStatus(DateUtilis.getCurrentDate());
+
         long computerMove = RandomUtilis.getRandom(1L, 3L);
         Optional<SingleGame> foundSingleGame = singleGameRepository.findById(gameID);
         if(!foundSingleGame.isPresent()) return Errors.NotFound("game belong to the user");
@@ -133,8 +153,6 @@ public class SingleGameController {
 
         // Winning case: Player beats computer
         if(resultList.get(0).equals("+") && resultList.get(1).equals("-")) {
-            List<User> foundUser = userRepository.findByUsername(singleGame.getPlayer());
-            User currentUser = foundUser.get(0);
             currentUser.setWinSingle(currentUser.getWinSingle() + 1);
             userRepository.save(currentUser);
 
@@ -143,8 +161,6 @@ public class SingleGameController {
 
         // Losing case: Player loses computer
         else if(resultList.get(0).equals("-") && resultList.get(1).equals("+")) {
-            var foundUser = userRepository.findByUsername(singleGame.getPlayer());
-            User currentUser = foundUser.get(0);
             currentUser.setLostSingle(currentUser.getLostSingle() + 1);
             userRepository.save(currentUser);
 
@@ -153,8 +169,6 @@ public class SingleGameController {
 
         // Game draw
         else {
-            var foundUser = userRepository.findByUsername(singleGame.getPlayer());
-            User currentUser = foundUser.get(0);
             currentUser.setDrawSingle(currentUser.getDrawSingle() + 1);
             userRepository.save(currentUser);
 

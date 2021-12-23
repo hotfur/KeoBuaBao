@@ -4,7 +4,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Setter @Getter
-public class GameAndUserID {
+public class GameIDAndUsername {
     private Long gameID;
-    private Long userID;
+    private String username;
+    private String token;
+    private String status;
 }
