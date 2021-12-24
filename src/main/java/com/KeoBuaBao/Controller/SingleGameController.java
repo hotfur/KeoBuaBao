@@ -31,8 +31,8 @@ public class SingleGameController {
         return singleGameRepository.findAll();
     }
 
-    @GetMapping("/get_player_single_game/{id}")
-    public ResponseEntity<Response> getOnePlayerSingleGame(@PathVariable Long id, @RequestBody User user) {
+    @GetMapping("/get_player_single_game")
+    public ResponseEntity<Response> getOnePlayerSingleGame(@RequestBody User user) {
         // Check null token
         if(user.getToken() == null)
             return Errors.NotImplemented("Token cannot be null");
@@ -41,11 +41,11 @@ public class SingleGameController {
         if(user.getStatus() == null)
             return Errors.NotImplemented("Datetime cannot be null");
 
-        Optional<User> foundUser = userRepository.findById(id);
-        if(!foundUser.isPresent())
+        List<User> foundUser = userRepository.findByUsername(user.getUsername());
+        if(foundUser.isEmpty())
             return Errors.NotFound("username");
 
-        User currentUser = foundUser.get();
+        User currentUser = foundUser.get(0);
         // Check equal token
         String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
         if(!serverToken.equals(user.getToken()))

@@ -21,6 +21,6 @@ public class Room {
     private String players = "";
     private String disconnectedPlayers = "";
     private String timersSinceDisconnected = "";
-    private String playerOne = "";
-    private String playerTwo = "";
+    private String playerOne;
+    private String playerTwo;
 }

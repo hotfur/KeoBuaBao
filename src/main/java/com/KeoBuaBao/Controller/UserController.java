@@ -174,29 +174,23 @@ public class UserController {
     // API log in
     @PostMapping("/checkPassword")
     public ResponseEntity<Response> checkPassword(@RequestBody User user) {
-        // Check null token
-        if(user.getToken() == null)
-            return Errors.NotImplemented("Token cannot be null");
-
-        // Check null datetime
-        if(user.getStatus() == null)
-            return Errors.NotImplemented("Datetime cannot be null");
-
         List<User> foundUser = userRepository.findByUsername(user.getUsername());
         if(foundUser.isEmpty())
            return Errors.NotFound("username");
 
         User currentUser = foundUser.get(0);
-        // Check equal token
-        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
-        if(!serverToken.equals(user.getToken()))
-            return Errors.NotImplemented("Tokens do not match");
         currentUser.setStatus(DateUtilis.getCurrentDate());
+        userRepository.save(currentUser);
+        // Get server token for the user.
+        user.setStatus(DateUtilis.getCurrentDate());
+        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
+
 
         List<User> foundUserList = userRepository.findByUsernameAndPassword(user.getUsername(), SecurityUtils.hashPassword(user.getPassword()));
 
         if (foundUserList.size() > 0) {
             User userRecord = foundUserList.get(0);
+            userRecord.setToken(serverToken);
             return Success.WithData("Correct", userRecord);
         }
 
