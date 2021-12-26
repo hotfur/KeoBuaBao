@@ -19,7 +19,7 @@ public class SecurityUtils {
         return hashed;
     }
 
-    public static String generateToken(String username, String hashedPassword, String dateTime) {
+    public static String generateToken(String username, String hashedPassword, Long dateTime) {
         String code = username + hashedPassword + dateTime;
         return SecurityUtils.hashPassword(code);
     }

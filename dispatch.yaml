@@ -1,3 +1,5 @@
 dispatch:
   - url: "api.keobuabao.com/*"
     service: default
+  - url: "keobuabao.com/*"
+    service: frontend

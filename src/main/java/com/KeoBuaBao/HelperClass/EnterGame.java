@@ -7,6 +7,6 @@ import lombok.Setter;
 public class EnterGame {
     private String username;
     private String token;
-    private String status;
+    private Long status;
     private int playerPosition;
 }

@@ -18,7 +18,7 @@ public class SingleGame {
     private Long id;
 
     private String player;
-    private String dateTime = DateUtilis.getCurrentDate();
+    private Long dateTime = DateUtilis.getCurrentDate();
     private Long timePerMove;
     private Long numberOfRounds;
     private Long difficulty;

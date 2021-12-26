@@ -15,4 +15,10 @@ public class Errors {
                 new Response("fail", message, "")
         );
     }
+
+    public static ResponseEntity<Response> Expired(String object) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                new Response("fail", "Your "+ object + " has expired, please renew it to continue.", "")
+        );
+    }
 }

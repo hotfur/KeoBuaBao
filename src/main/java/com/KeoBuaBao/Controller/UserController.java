@@ -118,6 +118,7 @@ public class UserController {
 
         User currentUser = foundUser.get();
         // Check equal token
+        if (DateUtilis.isTokenExpired(currentUser.getStatus(), newUser.getStatus())) return Errors.Expired("token");
         String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), newUser.getStatus());
         if(!serverToken.equals(newUser.getToken()))
             return Errors.NotImplemented("Tokens do not match");
@@ -162,6 +163,7 @@ public class UserController {
 
         User currentUser = foundUser.get();
         // Check equal token
+        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
         String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
         if(!serverToken.equals(user.getToken()))
             return Errors.NotImplemented("Tokens do not match");
@@ -174,23 +176,34 @@ public class UserController {
     // API log in
     @PostMapping("/checkPassword")
     public ResponseEntity<Response> checkPassword(@RequestBody User user) {
+        if (user.getPassword() == null) return Errors.NotImplemented("Password cannot be empty");
         List<User> foundUser = userRepository.findByUsername(user.getUsername());
-        if(foundUser.isEmpty())
-           return Errors.NotFound("username");
+        if(foundUser.isEmpty()) return Errors.NotFound("username");
 
         User currentUser = foundUser.get(0);
-        currentUser.setStatus(DateUtilis.getCurrentDate());
-        userRepository.save(currentUser);
         // Get server token for the user.
-        user.setStatus(DateUtilis.getCurrentDate());
-        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
+        String serverToken;
 
+        //Auto-renew token if eligible.
+        if (user.getStatus() != null && user.getToken() != null && DateUtilis.eligibleToRenew(currentUser.getStatus(), user.getStatus())) {
+            serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
+            if(user.getToken().equals(serverToken)) {
+                serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), DateUtilis.getCurrentDate());
+                currentUser.setStatus(DateUtilis.getCurrentDate());
+                userRepository.save(currentUser);
+                currentUser.setToken(serverToken);
+                return Success.WithData("Correct", currentUser);
+            }
+        }
 
+        //Otherwise authenticate using traditional password
         List<User> foundUserList = userRepository.findByUsernameAndPassword(user.getUsername(), SecurityUtils.hashPassword(user.getPassword()));
-
         if (foundUserList.size() > 0) {
             User userRecord = foundUserList.get(0);
+            serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), DateUtilis.getCurrentDate());
             userRecord.setToken(serverToken);
+            currentUser.setStatus(DateUtilis.getCurrentDate());
+            userRepository.save(currentUser);
             return Success.WithData("Correct", userRecord);
         }
 

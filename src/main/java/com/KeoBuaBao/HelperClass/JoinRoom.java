@@ -7,6 +7,6 @@ import lombok.Setter;
 public class JoinRoom {
     private String username;
     private String token;
-    private String status;
+    private Long status;
     private Long roomID;
 }

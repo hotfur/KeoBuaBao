@@ -7,6 +7,6 @@ import lombok.Setter;
 public class MultiplayerMove {
     private String username;
     private String token;
-    private String status;
+    private Long status;
     private Long move;
 }

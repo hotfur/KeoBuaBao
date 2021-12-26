@@ -5,7 +5,7 @@ public class Test {
     public static void main(String[] args) {
         String username = "uyennguyen";
         String password = "123";
-        String dateTime = "";
+        long dateTime = 0;
         System.out.println(dateTime);
         String token = SecurityUtils.generateToken(username, SecurityUtils.hashPassword(password), dateTime);
         System.out.println(token);

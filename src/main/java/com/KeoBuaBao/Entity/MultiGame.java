@@ -20,7 +20,7 @@ public class MultiGame {
     @JsonIgnore
     private List<PlayerMultiGame> PlayerMultiGame = new ArrayList<PlayerMultiGame>();
 
-    private String dateTime = DateUtilis.getCurrentDate();
+    private Long dateTime = DateUtilis.getCurrentDate();
     private Long timePerMove;
     private Long numberRounds;
     private String resultOne = "";

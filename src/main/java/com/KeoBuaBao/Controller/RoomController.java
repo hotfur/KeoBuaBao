@@ -50,6 +50,7 @@ public class RoomController {
 
         User currentUser = foundUser.get(0);
         // Check equal token
+        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
         String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
         if(!serverToken.equals(user.getToken()))
             return Errors.NotImplemented("Tokens do not match");
@@ -89,6 +90,7 @@ public class RoomController {
 
         User currentUser = foundUser.get(0);
         // Check equal token
+        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
         String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
         if(!serverToken.equals(user.getToken()))
             return Errors.NotImplemented("Tokens do not match");
@@ -158,6 +160,7 @@ public class RoomController {
 
         User currentUser = foundUser.get(0);
         // Check equal token
+        if (DateUtilis.isTokenExpired(currentUser.getStatus(), newPlayer.getStatus())) return Errors.Expired("token");
         String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), newPlayer.getStatus());
         if(!serverToken.equals(newPlayer.getToken()))
             return Errors.NotImplemented("Tokens do not match");
@@ -196,6 +199,7 @@ public class RoomController {
 
         User currentUser = foundUser.get(0);
         // Check equal token
+        if (DateUtilis.isTokenExpired(currentUser.getStatus(), newPlayer.getStatus())) return Errors.Expired("token");
         String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), newPlayer.getStatus());
         if(!serverToken.equals(newPlayer.getToken()))
             return Errors.NotImplemented("Tokens do not match");
@@ -252,6 +256,7 @@ public class RoomController {
 
         User currentUser = foundUser.get(0);
         // Check equal token
+        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
         String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
         if(!serverToken.equals(user.getToken()))
             return Errors.NotImplemented("Tokens do not match");

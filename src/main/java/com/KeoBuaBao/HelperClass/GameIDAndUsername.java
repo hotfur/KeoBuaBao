@@ -8,5 +8,5 @@ public class GameIDAndUsername {
     private Long gameID;
     private String username;
     private String token;
-    private String status;
+    private Long status;
 }

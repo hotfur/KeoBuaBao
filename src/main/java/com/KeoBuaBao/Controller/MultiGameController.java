@@ -54,6 +54,7 @@ public class MultiGameController {
 
         User currentUser = foundUser.get(0);
         // Check equal token
+        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
         String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
         if(!serverToken.equals(user.getToken()))
             return Errors.NotImplemented("Tokens do not match");
@@ -122,6 +123,7 @@ public class MultiGameController {
 
         User currentUser0 = foundUser.get(0);
         // Check equal token
+        if (DateUtilis.isTokenExpired(currentUser0.getStatus(), user.getStatus())) return Errors.Expired("token");
         String serverToken = SecurityUtils.generateToken(currentUser0.getUsername(), currentUser0.getPassword(), user.getStatus());
         if(!serverToken.equals(user.getToken()))
             return Errors.NotImplemented("Tokens do not match");
@@ -161,6 +163,7 @@ public class MultiGameController {
 
         User currentUser0 = foundUser.get(0);
         // Check equal token
+        if (DateUtilis.isTokenExpired(currentUser0.getStatus(), playerMove.getStatus())) return Errors.Expired("token");
         String serverToken = SecurityUtils.generateToken(currentUser0.getUsername(), currentUser0.getPassword(), playerMove.getStatus());
         if(!serverToken.equals(playerMove.getToken()))
             return Errors.NotImplemented("Tokens do not match");
@@ -242,6 +245,7 @@ public class MultiGameController {
 
         User currentUser = foundUser.get(0);
         // Check equal token
+        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
         String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
         if(!serverToken.equals(user.getToken()))
             return Errors.NotImplemented("Tokens do not match");

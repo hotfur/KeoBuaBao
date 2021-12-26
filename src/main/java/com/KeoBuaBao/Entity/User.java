@@ -32,7 +32,7 @@ public class User {
     private Long numberRound; // The number of rounds in a game
     private Long difficulty;
     private Long roomId; // The room ID that the user belongs to
-    private String status; // Online/Offline x minutes ago. Compare with 30 minutes. Status also saves the Datetime call from Front end.
+    private Long status; // Online/Offline x minutes ago. Compare with 30 minutes. Status also saves the Datetime call from Front end.
     private Long winSingle; // Number of win in all single matches with the computer
     private Long drawSingle; // Number of tie in all single matches with the computer
     private Long lostSingle; // Number of lost in all single matches with the computer

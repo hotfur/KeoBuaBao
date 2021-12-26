@@ -7,6 +7,6 @@ import lombok.Setter;
 public class Move {
     private String username;
     private String token;
-    private String status;
-    private long move;
+    private Long status;
+    private Long move;
 }
