@@ -4,6 +4,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * Cross-Origin Resource Sharing Policy
+ * Allow resource sharing between api.keobuabao.com and keobuabao.com for all packet.
+ */
 @Configuration
 public class CORS implements WebMvcConfigurer {
     @Override

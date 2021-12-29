@@ -19,7 +19,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-
+/**
+ * This class control the multiplayer games
+ */
 @RestController
 @RequestMapping("/multiplayer")
 public class MultiGameController {
@@ -32,12 +34,23 @@ public class MultiGameController {
     @Autowired
     private PlayerMultiGameRepository PlayerMultiGameRepository;
 
+    /**
+     * For admin use only
+     * @return all multiplayer games in the database
+     */
     @GetMapping("")
     public List<MultiGame> getAllMultiplayerGame() {
         return multiGameRepository.findAll();
     }
 
     // Start game API: Create a row in the table multiplayer
+
+    /**
+     * Start a multiplayer game with two players in position 1 and 2. Both must be ready for the game to begin.
+     * @param roomID the room where the game is hosted
+     * @param user either player one or two can start the game.
+     * @return errors if failed. success status to indicate the game has been started.
+     */
     @PostMapping("/{roomID}")
     public ResponseEntity<Response> createMutiplayer(@PathVariable Long roomID, @RequestBody User user) {
         // Check null token
@@ -103,9 +116,15 @@ public class MultiGameController {
         userRepository.save(Player2);
 
         return Success.WithData("Create game successfully", multiGame);
+
     }
 
-    // API to get the player from a match
+    /**
+     * Get a list of player in a multiplayer match.
+     * @param gameID the match that we want to get data from
+     * @param user the user currently requesting the data
+     * @return a list of players in a multiplayer match. errors if failed.
+     */
     @GetMapping("/{gameID}")
     public ResponseEntity<Response> getPlayerFromMatch(@PathVariable Long gameID, @RequestBody User user) {
         // Check null token
@@ -146,6 +165,12 @@ public class MultiGameController {
     }
 
 
+    /**
+     * Allow player to make a move in a multiplayer game
+     * @param gameID the game that the user are participating in
+     * @param playerMove an entity contains the player authentication and move information
+     * @return errors if failed. Otherwise, a response that acknowledges the move.
+     */
     @PostMapping("/playMultiplayer/{gameID}")
     public ResponseEntity<Response> playOnline(@PathVariable long gameID, @RequestBody MultiplayerMove playerMove) {
         // Check null token
@@ -227,6 +252,11 @@ public class MultiGameController {
         }
     }
 
+    /**
+     * Return the result of the nearest move to the player.
+     * @param user the player who just made a move.
+     * @return the result of the previous move. errors if failed.
+     */
     @PostMapping("/get_round_result")
     public ResponseEntity<Response> getRoundResultMultiplayer(@RequestBody GameIDAndUsername user) {
 

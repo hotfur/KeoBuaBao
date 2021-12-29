@@ -45,8 +45,8 @@ public class UserController {
         return Errors.NotImplemented(object + " cannot be empty");
     }
 
-
     /**
+     * Admin use only
      * A helper API for the admin to get all the users from the user entity
      * @return a list consisting of all users
      */
@@ -129,7 +129,8 @@ public class UserController {
 
     /**
      * An API to update the user's information. Initially, the server should check the user's token from the client. If
-     * both token resembles, the server will change the user information.
+     * both token resemble, the server will change the user information.
+     * The user cannot change his username.
      * @param newUser new user record to be updated
      * @return a response entity represents whether the update is successful or not.
      */
@@ -175,13 +176,12 @@ public class UserController {
         return Success.WithData("Update user successfully", currentUser);
     }
 
-    // API delete user
-
     /**
-     * An API to delete the user
-     * @param id
-     * @param user
-     * @return
+     * An API to delete the user. Initially, the server should check the user's token from the client. If both token
+     * resemble, the server will change the user information.
+     * @param id the user id to get rid of
+     * @param user the user information, which are the token and the status
+     * @return The successful message or error
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Response> deleteUser(@PathVariable Long id, @RequestBody User user) {
@@ -199,20 +199,26 @@ public class UserController {
 
         User currentUser = foundUser.get();
         // Check equal token
-        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
+        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus()))
+            return Errors.Expired("token");
         String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
         if(!serverToken.equals(user.getToken()))
             return Errors.NotImplemented("Tokens do not match");
-
 
         userRepository.deleteById(id);
         return Success.NoData("Delete user successfully");
     }
 
-    // API log in
+    /**
+     * An API to prompt the user login to the system by comparing either username or password
+     * This API can also issue a new token for user who wants to renew his token.
+     * @param user the user's username and password
+     * @return a response entity represents whether the query is successful or not. If success, also return the user's
+     * record as the data.
+     */
     @PostMapping("/checkPassword")
     public ResponseEntity<Response> checkPassword(@RequestBody User user) {
-        if (user.getPassword() == null) return Errors.NotImplemented("Password cannot be empty");
+        if(user.getUsername() == null) return Errors.NotFound("username");
         List<User> foundUser = userRepository.findByUsername(user.getUsername());
         if(foundUser.isEmpty()) return Errors.NotFound("username");
 
@@ -220,7 +226,7 @@ public class UserController {
         // Get server token for the user.
         String serverToken;
 
-        //Auto-renew token if eligible.
+        // Auto-renew token if eligible.
         if (user.getStatus() != null && user.getToken() != null && DateUtilis.eligibleToRenew(currentUser.getStatus(), user.getStatus())) {
             serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
             if(user.getToken().equals(serverToken)) {
@@ -232,7 +238,8 @@ public class UserController {
             }
         }
 
-        // Otherwise authenticate using traditional password
+        if (user.getPassword() == null) return Errors.NotImplemented("Password cannot be empty");
+        // Otherwise, authenticate using traditional password
         List<User> foundUserList = userRepository.findByUsernameAndPassword(user.getUsername(), SecurityUtils.hashPassword(user.getPassword()));
         if (foundUserList.size() > 0) {
             User userRecord = foundUserList.get(0);

@@ -10,6 +10,13 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
+/**
+ * A class to implement the single game entity
+ * @author Than Doan Thuan
+ * @author Vuong Kha Sieu
+ * @author Doan Duc Nguyen Long
+ * @author Nguyen Van Trang
+ */
 @Entity
 @Getter @Setter @RequiredArgsConstructor()
 public class SingleGame {

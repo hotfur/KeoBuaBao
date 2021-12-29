@@ -10,6 +10,14 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 // This room for now is available for only two players
+
+/**
+ * A class to implement the room entity
+ * @author Than Doan Thuan
+ * @author Vuong Kha Sieu
+ * @author Doan Duc Nguyen Long
+ * @author Nguyen Van Trang
+ */
 @Entity
 @Setter @Getter @RequiredArgsConstructor()
 public class Room {
@@ -17,10 +25,10 @@ public class Room {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    private String host;
-    private String players = "";
-    private String disconnectedPlayers = "";
-    private String timersSinceDisconnected = "";
-    private String playerOne;
-    private String playerTwo;
+    private String host; // The host of the room. There is only one host in each room.
+    private String players = ""; // All players (username) in the room, separated by a blank space
+    private String disconnectedPlayers = ""; // Save the players (username) been disconnected from the server
+    private String timersSinceDisconnected = ""; // Save the time disconnection for each disconnected player respectively
+    private String playerOne; // Seat (position) one of a game
+    private String playerTwo; // Seat (position) two of a game
 }
