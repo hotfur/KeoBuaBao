@@ -25,6 +25,10 @@ public class User {
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
     @JsonIgnore
+    private List<SingleGame> SingleGame = new ArrayList<>();
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
+    @JsonIgnore
     private List<PlayerMultiGame> PlayerMultiGame = new ArrayList<>(); // A list storing all multiplayer games of the user
 
     private String username; // User's username

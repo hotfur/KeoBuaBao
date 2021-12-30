@@ -84,11 +84,16 @@ public class SingleGameController {
         currentUser.setStatus(DateUtilis.getCurrentDate());
 
         SingleGame newSingleGame = new SingleGame();
-        newSingleGame.setPlayer(foundUsername.get(0).getUsername());
+        newSingleGame.setUser(currentUser);
         newSingleGame.setTimePerMove(foundUsername.get(0).getTimePerMove());
         newSingleGame.setNumberOfRounds(foundUsername.get(0).getNumberRound());
         newSingleGame.setDifficulty(foundUsername.get(0).getDifficulty());
         singleGameRepository.save(newSingleGame);
+        
+        List<SingleGame> listSingle = currentUser.getSingleGame();
+        listSingle.add(newSingleGame);
+        currentUser.setSingleGame(listSingle);
+        userRepository.save(currentUser);
 
         return Success.WithData("New game is successfully added", newSingleGame);
     }

@@ -1,14 +1,12 @@
 package com.KeoBuaBao.Entity;
 
 import com.KeoBuaBao.Utility.DateUtilis;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 /**
  * A class to implement the single game entity
@@ -24,7 +22,10 @@ public class SingleGame {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    private String player;
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private User user;
+
     private Long dateTime = DateUtilis.getCurrentDate();
     private Long timePerMove;
     private Long numberOfRounds;
