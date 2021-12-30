@@ -136,6 +136,10 @@ public class UserController {
      */
     @PutMapping("")
     public ResponseEntity<Response> updateUser(@RequestBody User newUser) {
+        // Check null username
+        if(newUser.getUsername() == null)
+            return Errors.NotImplemented("Username cannot be null");
+
         // Check null token
         if(newUser.getToken() == null)
             return Errors.NotImplemented("Token cannot be null");
@@ -144,9 +148,10 @@ public class UserController {
         if(newUser.getStatus() == null)
             return Errors.NotImplemented("Datetime cannot be null");
 
+
         // Find username
         var foundUsername = userRepository.findByUsername(newUser.getUsername());
-        if(foundUsername.size() > 0) return TakenError("Username");
+        if(foundUsername.isEmpty()) return Errors.NotFound("user");
         User currentUser = foundUsername.get(0);
 
         // Check equal token
