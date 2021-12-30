@@ -53,7 +53,7 @@ public class SingleGameController {
             return Errors.NotImplemented("Tokens do not match");
         currentUser.setStatus(DateUtilis.getCurrentDate());
 
-        List<SingleGame> foundSinglegame = singleGameRepository.findByPlayer(currentUser.getUsername());
+        List<SingleGame> foundSinglegame = currentUser.getSingleGame();
         if(!foundSinglegame.isEmpty())
             return Success.WithData("Here is all of the game from the user" , foundSinglegame);
         else

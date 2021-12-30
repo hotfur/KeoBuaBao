@@ -8,6 +8,10 @@ import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
+
+/**
+ * A class to store data for multiplayer games.
+ */
 @Entity
 @Getter @Setter @RequiredArgsConstructor
 public class MultiGame {
@@ -19,7 +23,7 @@ public class MultiGame {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "multiGame", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<PlayerMultiGame> PlayerMultiGame = new ArrayList<PlayerMultiGame>();
-
+    
     private Long dateTime = DateUtilis.getCurrentDate();
     private Long timePerMove;
     private Long numberRounds;

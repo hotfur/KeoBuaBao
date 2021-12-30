@@ -11,7 +11,7 @@ public class DateUtilis {
     //If the user last activity is yesterday then he must login again.
     //Date1 is the last activity of the user in database, date2 is the login timestamp.
     public static boolean isTokenExpired(long date1, long date2) {
-        return date1 + 86400000 > date2;
+        return date1 + 86400000 < date2;
     }
 
 
