@@ -151,12 +151,22 @@ public class RoomController {
         // Get the list of all members in the room
         var allPlayersList = PlayersListUtilis.getAllPlayers(allPlayers);
 
+        // Another case is that the user can either in player seat one or two, so make sure to delete (make null) to
+        // the seat appropriately too.
+        if(currentRoom.getPlayerOne() != null && currentRoom.getPlayerOne().equals(user.getUsername()))
+            currentRoom.setPlayerOne(null);
+
+        if(currentRoom.getPlayerTwo() != null && currentRoom.getPlayerTwo().equals(user.getUsername()))
+            currentRoom.setPlayerTwo(null);
+
+        roomRepository.save(currentRoom); // Update the room information entity when done
+
         // Check if this player is the host
         if(user.getUsername().equals(currentRoom.getHost())) {
             // Deal with the case when the user is the last member to quit the room. With that, the server will delete
             // the room record from the database too as well as update the user's room status to null, meaning the user
             // does not belong to any rooms.
-            if(allPlayersList.isEmpty()) {
+            if (allPlayersList.isEmpty()) {
                 roomRepository.deleteById(currentUser.getRoomId());
                 currentUser.setRoomId(null);
                 userRepository.save(currentUser);
@@ -189,15 +199,6 @@ public class RoomController {
             userRepository.save(currentUser);
         }
 
-        // Another case is that the user can either in player seat one or two, so make sure to delete (make null) to
-        // the seat appropriately too.
-        if(currentRoom.getPlayerOne() != null && currentRoom.getPlayerOne().equals(user.getUsername()))
-            currentRoom.setPlayerOne(null);
-
-        if(currentRoom.getPlayerTwo() != null && currentRoom.getPlayerTwo().equals(user.getUsername()))
-            currentRoom.setPlayerTwo(null);
-
-        roomRepository.save(currentRoom); // Update the room information entity when done
         return Success.NoData("You have been out of the room"); // Notify a successful message without data needed.
     }
 
@@ -313,7 +314,9 @@ public class RoomController {
      */
     @PostMapping("/quit_play_seat")
     public ResponseEntity<Response> quitPlaySeat(@RequestBody User user) {
-        if (user.getUsername() == null) return EmptyError("Username");
+        // Check null username
+        if (user.getUsername() == null)
+            return EmptyError("Username");
 
         // Check null token
         if(user.getToken() == null)

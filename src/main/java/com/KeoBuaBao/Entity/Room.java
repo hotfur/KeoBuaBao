@@ -9,8 +9,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
-// This room for now is available for only two players
-
 /**
  * A class to implement the room entity
  * @author Than Doan Thuan
@@ -31,4 +29,6 @@ public class Room {
     private String timersSinceDisconnected = ""; // Save the time disconnection for each disconnected player respectively
     private String playerOne; // Seat (position) one of a game
     private String playerTwo; // Seat (position) two of a game
+    private boolean playerOneReady; // Ready status for player one (true/false)
+    private boolean playerTwoReady; // Ready status for player two (true/false)
 }

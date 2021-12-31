@@ -11,6 +11,11 @@ import java.util.List;
 
 /**
  * A class to store data for multiplayer games.
+ *
+ * @author Than Doan Thuan
+ * @author Vuong Kha Sieu
+ * @author Nguyen Van Trang
+ * @author Doan Duc Nguyen Long
  */
 @Entity
 @Getter @Setter @RequiredArgsConstructor
@@ -22,11 +27,11 @@ public class MultiGame {
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "multiGame", cascade = CascadeType.ALL)
     @JsonIgnore
-    private List<PlayerMultiGame> PlayerMultiGame = new ArrayList<PlayerMultiGame>();
+    private List<PlayerMultiGame> PlayerMultiGame = new ArrayList<PlayerMultiGame>(); // A list containing two players of a multiplayer game
     
-    private Long dateTime = DateUtilis.getCurrentDate();
-    private Long timePerMove;
-    private Long numberRounds;
-    private String resultOne = "";
-    private String resultTwo = "";
+    private Long dateTime = DateUtilis.getCurrentDate(); // Get the current time of the game
+    private Long timePerMove; // The time for each move decision
+    private Long numberRounds; // The number of rounds in a game
+    private String resultOne = ""; // Result of player one in all rounds
+    private String resultTwo = ""; // Result of player two in all rounds
 }

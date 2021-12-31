@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * This class control the multiplayer games
+ * This class controls the multiplayer games
  */
 @RestController
 @RequestMapping("/multiplayer")
@@ -74,20 +74,25 @@ public class MultiGameController {
         currentUser.setStatus(DateUtilis.getCurrentDate());
 
         Optional<Room> foundRoom = roomRepository.findById(roomID);
-        if(!foundRoom.isPresent()) return Errors.NotFound("room");
-
+        if(!foundRoom.isPresent()) 
+            return Errors.NotFound("room");
+        
+        // In order to start the game, it should consist of fully two players
         Room currentRoom = foundRoom.get();
         if(currentRoom.getPlayerOne() == null || currentRoom.getPlayerTwo() == null) {
             return Errors.NotImplemented("Not enough players to start");
         }
-
+        
+        // Find the host of the room
         var foundHost = userRepository.findByUsername(currentRoom.getHost());
         User host = foundHost.get(0);
-
+        
+        // Create a multiplayer game record to save in the database
         MultiGame multiGame = new MultiGame();
         multiGame.setTimePerMove(host.getTimePerMove());
         multiGame.setNumberRounds(host.getNumberRound());
 
+        // Set the record for player one and player two. In other words, add data to the list in MultiGame entity.
         User Player1 = userRepository.findByUsername(currentRoom.getPlayerOne()).get(0);
         User Player2 = userRepository.findByUsername(currentRoom.getPlayerTwo()).get(0);
         var playerMultiGame_1 = new PlayerMultiGame();
@@ -109,6 +114,7 @@ public class MultiGameController {
         PlayerList2.add(playerMultiGame_2);
         Player2.setPlayerMultiGame(PlayerList2);
 
+        // Save all records to the necessary entities.
         PlayerMultiGameRepository.save(playerMultiGame_1);
         PlayerMultiGameRepository.save(playerMultiGame_2);
         multiGameRepository.save(multiGame);
@@ -116,7 +122,6 @@ public class MultiGameController {
         userRepository.save(Player2);
 
         return Success.WithData("Create game successfully", multiGame);
-
     }
 
     /**
