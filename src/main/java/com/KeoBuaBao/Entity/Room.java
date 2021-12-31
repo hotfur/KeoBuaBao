@@ -15,6 +15,7 @@ import javax.persistence.*;
  * @author Nguyen Van Trang
  */
 
+@Entity
 @Setter @Getter @RequiredArgsConstructor()
 public class Room {
     @Id
@@ -30,5 +31,6 @@ public class Room {
     private boolean playerOneReady; // Ready status for player one (true/false)
     private boolean playerTwoReady; // Ready status for player two (true/false)
     @JsonIgnore
+    @Transient
     private MultiGame game; // The game that this room is currently playing
 }
