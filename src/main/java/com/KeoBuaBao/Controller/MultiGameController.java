@@ -332,15 +332,22 @@ public class MultiGameController {
 
         MultiGame currentMultigame = foundMultigame.get();
         var playerMultiGameList = currentMultigame.getPlayerMultiGame();
+        List<String> usernameList = new ArrayList<String>();
         for (int i = 0; i < playerMultiGameList.size(); i++) {
             User tempUser = playerMultiGameList.get(i).getUser();
             if (tempUser.getUsername().equals(currentUser.getUsername()))
                 playerPosition = i;
+            usernameList.add(tempUser.getUsername());
         }
+
+
 
         // If neither two player calls this method. Catch the error, not implemented, and send out the result of the
         // most recent previous round.
         if (playerPosition == -1) {
+
+
+
             String resultOne = currentMultigame.getResultOne();
             String resultTwo = currentMultigame.getResultTwo();
 
