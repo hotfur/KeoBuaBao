@@ -233,7 +233,7 @@ public class RoomController {
         currentRoom.setPlayers(currentRoom.getPlayers() + newPlayer.getUsername() + " ");
         roomRepository.save(currentRoom);
 
-        currentUser.setRoomId(currentRoom.getId());
+        currentUser.setRoom(currentRoom);
         userRepository.save(currentUser);
 
         return Success.NoData("Join the room successfully");
@@ -269,10 +269,9 @@ public class RoomController {
             return Errors.NotImplemented("Tokens do not match");
         currentUser.setStatus(DateUtilis.getCurrentDate());
 
-        Optional<Room> foundRoom = roomRepository.findById(currentUser.getRoomId());
-        if(!foundRoom.isPresent()) return Errors.NotFound("room");
-
-        Room currentRoom = foundRoom.get();
+        Room currentRoom = currentUser.getRoom();
+        if(currentUser.getRoom() == null)
+            return Errors.NotImplemented("You are not belonged to any rooms");
 
         if(newPlayer.getPlayerPosition() != 1 && newPlayer.getPlayerPosition() != 2)
             return Errors.NotImplemented("Invalid seat, only seat number one or two");
@@ -330,13 +329,9 @@ public class RoomController {
             return Errors.NotImplemented("Tokens do not match");
         currentUser.setStatus(DateUtilis.getCurrentDate());
 
-        if(currentUser.getRoomId() == null)
+        Room currentRoom = currentUser.getRoom();
+        if(currentUser.getRoom() == null)
             return Errors.NotImplemented("You are not belonged to any rooms");
-
-        Optional<Room> foundRoom = roomRepository.findById(currentUser.getRoomId());
-        if(!foundRoom.isPresent()) return Errors.NotFound("room");
-
-        Room currentRoom = foundRoom.get();
 
         // The player is in seat one
         if(user.getUsername().equals(currentRoom.getPlayerOne()))

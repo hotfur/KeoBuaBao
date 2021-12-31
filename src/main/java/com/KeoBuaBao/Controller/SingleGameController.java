@@ -120,6 +120,12 @@ public class SingleGameController {
         return Success.WithData("New game is successfully added", newSingleGame);
     }
 
+    /**
+     * Allow the player to make moves with a random number generator
+     * @param gameID the single player game id
+     * @param playerMove an entity that includes both player authentication and move information
+     * @return errors if failed, match result if success
+     */
     @PostMapping("/{gameID}")
     public ResponseEntity<Response> playWithComputer(@PathVariable long gameID, @RequestBody Move playerMove) {
 

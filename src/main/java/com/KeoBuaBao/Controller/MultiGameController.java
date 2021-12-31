@@ -123,7 +123,7 @@ public class MultiGameController {
         }
 
         // Find the host of the room
-        User host = currentRoom.getHost();
+        User host = userRepository.findByUsername(currentRoom.getHost()).get(0);
         
         // Create a multiplayer game record to save in the database
         MultiGame multiGame = new MultiGame();
@@ -338,10 +338,48 @@ public class MultiGameController {
                 playerPosition = i;
         }
 
+        // If neither two player calls this method. Catch the error, not implemented, and send out the result of the
+        // most recent previous round.
         if (playerPosition == -1) {
+            String resultOne = currentMultigame.getResultOne();
+            String resultTwo = currentMultigame.getResultTwo();
 
-            if ()
-            return Errors.NotImplemented("You are not in the game");
+            // If both players are playing the same round
+            if(resultOne.length() == resultTwo.length()) {
+                // Get the round result for both players
+                char roundResultOne = resultOne.charAt(resultOne.length() - 1);
+                char roundResultTwo = resultTwo.charAt(resultTwo.length() - 1);
+
+                // Case 1: When player one wins
+                if(roundResultOne == '+' && roundResultTwo == '-')
+                    return Errors.NotImplemented("You are not in the game. So far player one wins this round");
+                // Case 2: When player two wins
+                else if(roundResultOne == '-' && roundResultTwo == '+')
+                    return Errors.NotImplemented("You are not in the game. So far player two wins this round");
+                // Case 3: When the game draws
+                else if(roundResultOne == '0' && roundResultTwo == '0')
+                    return Errors.NotImplemented("You are not in the game. So far this round ends up with a tie");
+            }
+
+            // If there is one player ahead, we will send out the result of the previous round
+            else {
+                // Get the position of the previous round
+                int lastRoundIndex = Math.min(resultOne.length(), resultTwo.length()) - 1;
+                // Get the round result for both players
+                char roundResultOne = resultOne.charAt(lastRoundIndex);
+                char roundResultTwo = resultTwo.charAt(lastRoundIndex);
+
+                // Case 1: When player one wins
+                if(roundResultOne == '+' && roundResultTwo == '-')
+                    return Errors.NotImplemented("You are not in the game. So far player one wins this round");
+                // Case 2: When player two wins
+                else if(roundResultOne == '-' && roundResultTwo == '+')
+                    return Errors.NotImplemented("You are not in the game. So far player two wins this round");
+                // Case 3: When the game draws
+                else if(roundResultOne == '0' && roundResultTwo == '0')
+                    return Errors.NotImplemented("You are not in the game. So far this round ends up with a tie");
+            }
+
         }
 
         String result;
