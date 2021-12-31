@@ -47,18 +47,16 @@ public class MultiGameController {
 
     /**
      * Start a multiplayer game with two players in position 1 and 2. Both must be ready for the game to begin.
-     * @param roomID the room where the game is hosted
      * @param user either player one or two can start the game.
      * @return errors if failed. success status to indicate the game has been started.
      */
-    @PostMapping("/{roomID}")
-    public ResponseEntity<Response> createMutiplayer(@PathVariable Long roomID, @RequestBody User user) {
+    @PostMapping("")
+    public ResponseEntity<Response> createMutiplayer(@RequestBody User user) {
         // Check null token
         if(user.getToken() == null) return Errors.NotImplemented("Token cannot be null");
 
         // Check null datetime
-        if(user.getStatus() == null)
-            return Errors.NotImplemented("Datetime cannot be null");
+        if(user.getStatus() == null) return Errors.NotImplemented("Datetime cannot be null");
 
         if (user.getUsername() == null) return Errors.NotFound("user");
 
@@ -72,12 +70,11 @@ public class MultiGameController {
         if(!serverToken.equals(user.getToken())) return Errors.NotImplemented("Tokens do not match");
         currentUser.setStatus(DateUtilis.getCurrentDate());
 
-        Optional<Room> foundRoom = roomRepository.findById(roomID);
-        if(!foundRoom.isPresent()) 
-            return Errors.NotFound("room");
+        Room currentRoom = currentUser.getRoom();
+        if(currentRoom == null) return Errors.NotFound("room");
         
         // In order to start the game, it should consist of fully two players
-        Room currentRoom = foundRoom.get();
+
         if(currentRoom.getPlayerOne() == null || currentRoom.getPlayerTwo() == null) {
             return Errors.NotImplemented("Not enough players to start");
         }
@@ -86,30 +83,28 @@ public class MultiGameController {
         User Player1 = userRepository.findByUsername(currentRoom.getPlayerOne()).get(0);
         User Player2 = userRepository.findByUsername(currentRoom.getPlayerTwo()).get(0);
 
+        // Check if the game have been started
+        if (currentRoom.getGame() != null) return Errors.NotImplemented("The game has started!");
+
         //Check if the current user is indeed player 1 or 2, otherwise refuse to start the game
         if(Player1.getUsername().equals(user.getUsername())) {
             if (currentRoom.isPlayerOneReady()) {
-                if (currentRoom.isPlayerTwoReady()) return Errors.NotImplemented("The game has started!");
-                else {
-                    currentRoom.setPlayerOneReady(false);
-                    roomRepository.save(currentRoom);
-                    return Success.NoData("You have unready!");
-                }
+                currentRoom.setPlayerOneReady(false);
+                roomRepository.save(currentRoom);
+                return Success.NoData("You have unready!");
             }
             else {
                 currentRoom.setPlayerOneReady(true);
                 roomRepository.save(currentRoom);
-                if (!currentRoom.isPlayerTwoReady()) return Success.NoData("Ready! Please wait for your opponent to start the game");
+                if (!currentRoom.isPlayerTwoReady())
+                    return Success.NoData("Ready! Please wait for your opponent to start the game");
             }
         }
         else if (Player2.getUsername().equals(user.getUsername())) {
             if (currentRoom.isPlayerTwoReady()) {
-                if (currentRoom.isPlayerOneReady()) return Errors.NotImplemented("The game has started!");
-                else {
-                    currentRoom.setPlayerTwoReady(false);
-                    roomRepository.save(currentRoom);
-                    return Success.NoData("You have unready!");
-                }
+                currentRoom.setPlayerTwoReady(false);
+                roomRepository.save(currentRoom);
+                return Success.NoData("You have unready!");
             }
             else {
                 currentRoom.setPlayerTwoReady(true);
@@ -211,12 +206,11 @@ public class MultiGameController {
 
     /**
      * Allow player to make a move in a multiplayer game
-     * @param gameID the game that the user are participating in
      * @param playerMove an entity contains the player authentication and move information
      * @return errors if failed. Otherwise, a response that acknowledges the move.
      */
-    @PostMapping("/playMultiplayer/{gameID}")
-    public ResponseEntity<Response> playOnline(@PathVariable long gameID, @RequestBody Move playerMove) {
+    @PostMapping("/play")
+    public ResponseEntity<Response> playOnline(@RequestBody Move playerMove) {
         // Check null token
         if(playerMove.getToken() == null)
             return Errors.NotImplemented("Token cannot be null");
@@ -225,64 +219,55 @@ public class MultiGameController {
         if(playerMove.getStatus() == null)
             return Errors.NotImplemented("Datetime cannot be null");
 
+        // Check for null user
         if (playerMove.getUsername() == null) return Errors.NotFound("user");
 
-        List<User> foundUser = userRepository.findByUsername(playerMove.getUsername());
-        if (foundUser.isEmpty()) return Errors.NotFound("user");
-
-        User currentUser0 = foundUser.get(0);
-        // Check equal token
-        if (DateUtilis.isTokenExpired(currentUser0.getStatus(), playerMove.getStatus())) return Errors.Expired("token");
-        String serverToken = SecurityUtils.generateToken(currentUser0.getUsername(), currentUser0.getPassword(), playerMove.getStatus());
-        if(!serverToken.equals(playerMove.getToken()))
-            return Errors.NotImplemented("Tokens do not match");
-        currentUser0.setStatus(DateUtilis.getCurrentDate());
-
-        Optional<MultiGame> foundMultiGame = multiGameRepository.findById(gameID);
-        if(!foundMultiGame.isPresent()) return Errors.NotFound("game");
-
+        //Check for illegal moves
         if(playerMove.getMove() < 1 || playerMove.getMove() > 3) {
             return Errors.NotImplemented("Illegal move");
         }
 
-        MultiGame currentMultigame = foundMultiGame.get();
+        List<User> foundUser = userRepository.findByUsername(playerMove.getUsername());
+        if (foundUser.isEmpty()) return Errors.NotFound("user");
+
+        User currentUser = foundUser.get(0);
+        // Check equal token
+        if (DateUtilis.isTokenExpired(currentUser.getStatus(), playerMove.getStatus())) return Errors.Expired("token");
+        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), playerMove.getStatus());
+        if(!serverToken.equals(playerMove.getToken()))
+            return Errors.NotImplemented("Tokens do not match");
+        currentUser.setStatus(DateUtilis.getCurrentDate());
+        userRepository.save(currentUser);
+
+        Room currentRoom = currentUser.getRoom();
+        if (currentRoom == null) return Errors.NotImplemented("You are not in a room");
+        MultiGame currentMultigame = currentRoom.getGame();
+        if (currentMultigame == null) return Errors.NotImplemented("No game is being played at the moment");
+
         if(currentMultigame.getResultOne().length() >= currentMultigame.getNumberRounds()) {
             return Errors.NotImplemented("The game is over!");
         }
 
 
-        var playerMultiGameList = currentMultigame.getPlayerMultiGame();
-        var usernameList = new ArrayList<String>();
-
-        for (PlayerMultiGame playerMultiGame : playerMultiGameList) {
-            User currentUser = playerMultiGame.getUser();
-            String username = currentUser.getUsername();
-            usernameList.add(username);
-        }
-
-        if(!usernameList.contains(playerMove.getUsername())) return Errors.NotImplemented("You are not in the game");
-
         int playerPosition;
-        if(playerMove.getUsername().equals(usernameList.get(0))) playerPosition = 0;
-        else playerPosition = 1;
+        if (playerMove.getUsername().equals(currentRoom.getPlayerOne())) playerPosition = 0;
+        else if (playerMove.getUsername().equals(currentRoom.getPlayerTwo())) playerPosition = 1;
+        else return Errors.NotImplemented("You are not a player");
 
-
+        var playerMultiGameList = currentMultigame.getPlayerMultiGame();
         var currentPlayerMultiGame = playerMultiGameList.get(playerPosition);
         var opponentPlayerMultiGame = playerMultiGameList.get(1 - playerPosition);
         int currentPlayer_MoveNumber = currentPlayerMultiGame.getMoves().length();
         int opponentPlayer_MoveNumber = opponentPlayerMultiGame.getMoves().length();
 
         if (currentPlayer_MoveNumber > opponentPlayer_MoveNumber) {
-            return Errors.NotImplemented("Please wait for the opponent to make a move");
+            return Errors.NotImplemented("Move already sent! Please wait for the round to end");
         }
 
         currentPlayerMultiGame.setMoves(currentPlayerMultiGame.getMoves() + playerMove.getMove());
         PlayerMultiGameRepository.save(currentPlayerMultiGame);
 
-        if (currentPlayer_MoveNumber + 1 > opponentPlayer_MoveNumber) {
-            return Success.NoData("Send move success! Please wait for the opponent to make a move");
-        }
-        else {
+        if (currentPlayer_MoveNumber + 1 <= opponentPlayer_MoveNumber) {
             String player1moves = playerMultiGameList.get(0).getMoves();
             String player2moves = playerMultiGameList.get(1).getMoves();
             String latestPlayerOneMove = Character.toString(player1moves.charAt(player1moves.length() - 1));
@@ -292,8 +277,8 @@ public class MultiGameController {
             currentMultigame.setResultOne(currentMultigame.getResultOne() + resultList.get(0));
             currentMultigame.setResultTwo(currentMultigame.getResultTwo() + resultList.get(1));
             multiGameRepository.save(currentMultigame);
-            return Success.NoData("Send move success! Please wait for the round to end");
         }
+        return Success.NoData("Send move success! Please wait for the round to end");
     }
 
     /**
@@ -302,14 +287,14 @@ public class MultiGameController {
      * @return the result of the previous move. errors if failed.
      */
     @PostMapping("/get_round_result")
-    public ResponseEntity<Response> getRoundResultMultiplayer(@RequestBody GameIDAndUsername user) {
+    public ResponseEntity<Response> getRoundResultMultiplayer(@RequestBody User user) {
 
         // Check null token
-        if(user.getToken() == null)
+        if (user.getToken() == null)
             return Errors.NotImplemented("Token cannot be null");
 
         // Check null datetime
-        if(user.getStatus() == null)
+        if (user.getStatus() == null)
             return Errors.NotImplemented("Datetime cannot be null");
 
         if (user.getUsername() == null) return Errors.NotFound("user");
@@ -321,84 +306,52 @@ public class MultiGameController {
         // Check equal token
         if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
         String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
-        if(!serverToken.equals(user.getToken()))
+        if (!serverToken.equals(user.getToken()))
             return Errors.NotImplemented("Tokens do not match");
         currentUser.setStatus(DateUtilis.getCurrentDate());
 
-        Optional<MultiGame> foundMultigame = multiGameRepository.findById(user.getGameID());
-        if (!foundMultigame.isPresent()) return Errors.NotFound("game");
+        Room currentRoom = currentUser.getRoom();
+        if (currentRoom == null) return Errors.NotImplemented("You are not in a room");
+        MultiGame currentMultigame = currentRoom.getGame();
+        if (currentMultigame == null) return Errors.NotImplemented("No game is being played at the moment");
+
+        if (currentMultigame.getResultOne().length() >= currentMultigame.getNumberRounds()) {
+            return Errors.NotImplemented("The game is over!");
+        }
+
+        var playerMultiGameList = currentMultigame.getPlayerMultiGame();
+        String resultOne = currentMultigame.getResultOne();
+
 
         int playerPosition = -1;
+        if (user.getUsername().equals(currentRoom.getPlayerOne())) playerPosition = 0;
+        else if (user.getUsername().equals(currentRoom.getPlayerTwo())) playerPosition = 1;
 
-        MultiGame currentMultigame = foundMultigame.get();
-        var playerMultiGameList = currentMultigame.getPlayerMultiGame();
-        List<String> usernameList = new ArrayList<String>();
-        for (int i = 0; i < playerMultiGameList.size(); i++) {
-            User tempUser = playerMultiGameList.get(i).getUser();
-            if (tempUser.getUsername().equals(currentUser.getUsername()))
-                playerPosition = i;
-            usernameList.add(tempUser.getUsername());
-        }
+        // Get the round result
+        char roundResultOne = resultOne.charAt(resultOne.length() - 1);
+        if (playerPosition != -1) {
+            if (playerMultiGameList.get(0).getMoves().length() == playerMultiGameList.get(1).getMoves().length()) {
+                String result;
+                if (playerPosition == 0) result = currentMultigame.getResultOne();
+                else result = currentMultigame.getResultTwo();
 
+                if (result.charAt(result.length() - 1) == '+')
+                    return Success.NoData("Congratulation! You have won this round!");
 
+                else if (result.charAt(result.length() - 1) == '-')
+                    return Success.NoData("Unfortunately, the opponent has beaten you!");
 
-        // If neither two player calls this method. Catch the error, not implemented, and send out the result of the
-        // most recent previous round.
-        if (playerPosition == -1) {
-
-
-
-            String resultOne = currentMultigame.getResultOne();
-            String resultTwo = currentMultigame.getResultTwo();
-
-            // If both players are playing the same round
-            if(resultOne.length() == resultTwo.length()) {
-                // Get the round result for both players
-                char roundResultOne = resultOne.charAt(resultOne.length() - 1);
-                char roundResultTwo = resultTwo.charAt(resultTwo.length() - 1);
-
-                // Case 1: When player one wins
-                if(roundResultOne == '+' && roundResultTwo == '-')
-                    return Errors.NotImplemented("You are not in the game. So far player one wins this round");
-                // Case 2: When player two wins
-                else if(roundResultOne == '-' && roundResultTwo == '+')
-                    return Errors.NotImplemented("You are not in the game. So far player two wins this round");
-                // Case 3: When the game draws
-                else if(roundResultOne == '0' && roundResultTwo == '0')
-                    return Errors.NotImplemented("You are not in the game. So far this round ends up with a tie");
+                else return Success.NoData("The game results in a draw!");
             }
-
-            // If there is one player ahead, we will send out the result of the previous round
             else {
-                // Get the position of the previous round
-                int lastRoundIndex = Math.min(resultOne.length(), resultTwo.length()) - 1;
-                // Get the round result for both players
-                char roundResultOne = resultOne.charAt(lastRoundIndex);
-                char roundResultTwo = resultTwo.charAt(lastRoundIndex);
-
-                // Case 1: When player one wins
-                if(roundResultOne == '+' && roundResultTwo == '-')
-                    return Errors.NotImplemented("You are not in the game. So far player one wins this round");
-                // Case 2: When player two wins
-                else if(roundResultOne == '-' && roundResultTwo == '+')
-                    return Errors.NotImplemented("You are not in the game. So far player two wins this round");
-                // Case 3: When the game draws
-                else if(roundResultOne == '0' && roundResultTwo == '0')
-                    return Errors.NotImplemented("You are not in the game. So far this round ends up with a tie");
+                return Errors.NotImplemented("Please wait for the round to finish");
             }
-
         }
-
-        String result;
-        if (playerPosition == 0) result = currentMultigame.getResultOne();
-        else result = currentMultigame.getResultTwo();
-
-        if (result.charAt(result.length() - 1) == '+')
-            return Success.NoData("Congratulation! You have won this round!");
-
-        else if (result.charAt(result.length() - 1) == '-')
-            return Success.NoData("Unfortunately, the opponent has beaten you!");
-
-        else return Success.NoData("The game results in a draw!");
+        // Case 1: When player one wins
+        if (roundResultOne == '+') return Errors.NotImplemented("So far player one wins this round");
+            // Case 2: When player two wins
+        else if (roundResultOne == '-') return Errors.NotImplemented("So far player two wins this round");
+            // Case 3: When the game draws
+        else return Errors.NotImplemented("So far this round ends up with a tie");
     }
 }

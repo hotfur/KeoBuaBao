@@ -93,7 +93,7 @@ public class RoomController {
         // Create a new room record to store
         Room room = new Room();
         room.setPlayers("");
-        room.setHost(currentUser.getUsername()); // Since the player creates the room, he or she will initially be the host.
+        room.setHost(currentUser.getUsername()); // Since the player creates the room, he or she will be the host.
         roomRepository.save(room);
 
         currentUser.setRoom(room);
@@ -155,15 +155,11 @@ public class RoomController {
         roomRepository.save(currentRoom); // Update the room information entity when done
 
         // Check if this player is the host
-        if(user.getUsername().equals(currentRoom.getHost())) {
+        if (user.getUsername().equals(currentRoom.getHost())) {
             // Deal with the case when the user is the last member to quit the room. With that, the server will delete
             // the room record from the database too as well as update the user's room status to null, meaning the user
             // does not belong to any rooms.
-            if (allPlayersList.isEmpty()) {
-                roomRepository.delete(currentRoom);
-                currentUser.setRoom(null);
-                userRepository.save(currentUser);
-            }
+            if (allPlayersList.isEmpty()) roomRepository.delete(currentRoom);
             // However, when there are several users in the room, we should deal with the case differently. First, we
             // will randomly assign the host. In this case, we will assign to the last member because remove the last
             // element from the list takes O(1) time complexity, which is cheap to do. After deletion, update the
@@ -173,9 +169,6 @@ public class RoomController {
                 allPlayersList.remove(allPlayersList.size() - 1);
                 currentRoom.setPlayers(ConvertListtoString.convertToString(allPlayersList));
                 roomRepository.save(currentRoom);
-
-                currentUser.setRoom(null);
-                userRepository.save(currentUser);
             }
         }
 
@@ -188,9 +181,9 @@ public class RoomController {
             currentRoom.setPlayers(ConvertListtoString.convertToString(allPlayersList));
             roomRepository.save(currentRoom);
 
-            currentUser.setRoom(null);
-            userRepository.save(currentUser);
         }
+        currentUser.setRoom(null);
+        userRepository.save(currentUser);
 
         return Success.NoData("You have been out of the room"); // Notify a successful message without data needed.
     }
@@ -256,10 +249,9 @@ public class RoomController {
         if(newPlayer.getStatus() == null)
             return Errors.NotImplemented("Datetime cannot be null");
 
-        // Find the
+        // Find the user
         List<User> foundUser = userRepository.findByUsername(newPlayer.getUsername());
-        if (foundUser.isEmpty())
-            return Errors.NotFound("user");
+        if (foundUser.isEmpty()) return Errors.NotFound("user");
 
         User currentUser = foundUser.get(0);
         // Check equal token
@@ -307,16 +299,13 @@ public class RoomController {
     @PostMapping("/quit_play_seat")
     public ResponseEntity<Response> quitPlaySeat(@RequestBody User user) {
         // Check null username
-        if (user.getUsername() == null)
-            return EmptyError("Username");
+        if (user.getUsername() == null) return EmptyError("Username");
 
         // Check null token
-        if(user.getToken() == null)
-            return Errors.NotImplemented("Token cannot be null");
+        if(user.getToken() == null) return Errors.NotImplemented("Token cannot be null");
 
         // Check null datetime
-        if(user.getStatus() == null)
-            return Errors.NotImplemented("Datetime cannot be null");
+        if(user.getStatus() == null) return Errors.NotImplemented("Datetime cannot be null");
 
         List<User> foundUser = userRepository.findByUsername(user.getUsername());
         if (foundUser.isEmpty()) return Errors.NotFound("user");
@@ -330,15 +319,12 @@ public class RoomController {
         currentUser.setStatus(DateUtilis.getCurrentDate());
 
         Room currentRoom = currentUser.getRoom();
-        if(currentUser.getRoom() == null)
-            return Errors.NotImplemented("You are not belonged to any rooms");
+        if(currentUser.getRoom() == null) return Errors.NotImplemented("You are not belonged to any rooms");
 
         // The player is in seat one
-        if(user.getUsername().equals(currentRoom.getPlayerOne()))
-            currentRoom.setPlayerOne(null);
+        if(user.getUsername().equals(currentRoom.getPlayerOne())) currentRoom.setPlayerOne(null);
 
-        else if(user.getUsername().equals(currentRoom.getPlayerTwo()))
-            currentRoom.setPlayerTwo(null);
+        else if(user.getUsername().equals(currentRoom.getPlayerTwo())) currentRoom.setPlayerTwo(null);
 
         else return Errors.NotImplemented("You do not belong to any seats");
         roomRepository.save(currentRoom);

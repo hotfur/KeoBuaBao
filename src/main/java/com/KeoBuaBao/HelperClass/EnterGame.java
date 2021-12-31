@@ -8,7 +8,7 @@ import lombok.Setter;
  * @author Than Doan Thuan
  * @author Vuong Kha Sieu
  * @author Doan Duc Nguyen Long
- * @aythor Nguyen Van Trang
+ * @author Nguyen Van Trang
  */
 @Setter @Getter
 public class EnterGame {
