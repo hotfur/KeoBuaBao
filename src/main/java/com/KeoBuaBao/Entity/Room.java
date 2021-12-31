@@ -4,10 +4,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 /**
  * A class to implement the room entity
@@ -24,11 +21,13 @@ public class Room {
     private Long id;
 
     private String host; // The host of the room. There is only one host in each room.
-    private String players = ""; // All players (username) in the room, separated by a blank space
+    private String players; // All players (username) in the room, separated by a blank space
     private String disconnectedPlayers = ""; // Save the players (username) been disconnected from the server
     private String timersSinceDisconnected = ""; // Save the time disconnection for each disconnected player respectively
     private String playerOne; // Seat (position) one of a game
     private String playerTwo; // Seat (position) two of a game
     private boolean playerOneReady; // Ready status for player one (true/false)
     private boolean playerTwoReady; // Ready status for player two (true/false)
+    @Transient
+    private MultiGame game; //The game that this room is currently playing
 }

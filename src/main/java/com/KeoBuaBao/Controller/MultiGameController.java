@@ -82,7 +82,47 @@ public class MultiGameController {
         if(currentRoom.getPlayerOne() == null || currentRoom.getPlayerTwo() == null) {
             return Errors.NotImplemented("Not enough players to start");
         }
-        
+
+        // Get the two player of the game
+        User Player1 = userRepository.findByUsername(currentRoom.getPlayerOne()).get(0);
+        User Player2 = userRepository.findByUsername(currentRoom.getPlayerTwo()).get(0);
+
+        //Check if the current user is indeed player 1 or 2, otherwise refuse to start the game
+        if(Player1.getUsername().equals(user.getUsername())) {
+            if (currentRoom.isPlayerOneReady()) {
+                if (currentRoom.isPlayerTwoReady()) return Errors.NotImplemented("The game has started!", );
+                else {
+                    currentRoom.setPlayerOneReady(false);
+                    roomRepository.save(currentRoom);
+                    return Success.NoData("You have unready!");
+                }
+            }
+            else {
+                currentRoom.setPlayerOneReady(true);
+                roomRepository.save(currentRoom);
+                if (!currentRoom.isPlayerTwoReady()) return Success.NoData("Ready! Please wait for your opponent to start the game");
+            }
+        }
+        else if (Player2.getUsername().equals(user.getUsername())) {
+            if (currentRoom.isPlayerTwoReady()) {
+                if (currentRoom.isPlayerOneReady()) return Errors.NotImplemented("The game has started!");
+                else {
+                    currentRoom.setPlayerTwoReady(false);
+                    roomRepository.save(currentRoom);
+                    return Success.NoData("You have unready!");
+                }
+            }
+            else {
+                currentRoom.setPlayerTwoReady(true);
+                roomRepository.save(currentRoom);
+                if (!currentRoom.isPlayerOneReady())
+                    return Success.NoData("Ready! Please wait for your opponent to start the game");
+            }
+        }
+        else {
+            return Errors.NotImplemented("You are not authorized to start this game");
+        }
+
         // Find the host of the room
         var foundHost = userRepository.findByUsername(currentRoom.getHost());
         User host = foundHost.get(0);
@@ -93,8 +133,6 @@ public class MultiGameController {
         multiGame.setNumberRounds(host.getNumberRound());
 
         // Set the record for player one and player two. In other words, add data to the list in MultiGame entity.
-        User Player1 = userRepository.findByUsername(currentRoom.getPlayerOne()).get(0);
-        User Player2 = userRepository.findByUsername(currentRoom.getPlayerTwo()).get(0);
         var playerMultiGame_1 = new PlayerMultiGame();
         playerMultiGame_1.setMultiGame(multiGame);
         playerMultiGame_1.setUser(Player1);
@@ -120,6 +158,7 @@ public class MultiGameController {
         multiGameRepository.save(multiGame);
         userRepository.save(Player1);
         userRepository.save(Player2);
+        currentRoom.
 
         return Success.WithData("Create game successfully", multiGame);
     }
@@ -299,7 +338,11 @@ public class MultiGameController {
                 playerPosition = i;
         }
 
-        if (playerPosition == -1) return Errors.NotImplemented("You are not in the game");
+        if (playerPosition == -1) {
+
+            if ()
+            return Errors.NotImplemented("You are not in the game");
+        }
 
         String result;
         if (playerPosition == 0) result = currentMultigame.getResultOne();
