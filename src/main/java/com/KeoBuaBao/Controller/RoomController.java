@@ -88,16 +88,15 @@ public class RoomController {
         currentUser.setStatus(DateUtilis.getCurrentDate());
 
         // Check whether the player is already in a room
-        if(currentUser.getRoomId() != null)
-            return Errors.NotImplemented("You are already in a room");
+        if(currentUser.getRoom() != null) return Errors.NotImplemented("You are already in a room");
 
         // Create a new room record to store
         Room room = new Room();
         room.setPlayers("");
-        room.setHost(user.getUsername()); // Since the player creates the room, he or she will initially be the host.
+        room.setHost(currentUser.getUsername()); // Since the player creates the room, he or she will initially be the host.
         roomRepository.save(room);
 
-        currentUser.setRoomId(room.getId());
+        currentUser.setRoom(room);
         userRepository.save(currentUser);
 
         return Success.WithData("New room is created", room); // Everything is successful, room can be created
@@ -136,17 +135,11 @@ public class RoomController {
             return Errors.NotImplemented("Tokens do not match");
         currentUser.setStatus(DateUtilis.getCurrentDate());
 
-        // Catch the error when the user does not belong to any room so he or she cannot be out.
-        if(currentUser.getRoomId() == null)
-            return Errors.NotImplemented("You are not in any room");
+        Room currentRoom = currentUser.getRoom();
 
-        // Find the room that the current user belongs to
-        Optional<Room> foundRoom = roomRepository.findById(currentUser.getRoomId());
         // Catch the error when the room is not found
-        if(!foundRoom.isPresent())
-            return Errors.NotFound("the room belong to this user");
+        if(currentRoom == null) return Errors.NotFound("the room belong to this user");
 
-        Room currentRoom = foundRoom.get();
         String allPlayers = currentRoom.getPlayers();
         // Get the list of all members in the room
         var allPlayersList = PlayersListUtilis.getAllPlayers(allPlayers);
@@ -167,8 +160,8 @@ public class RoomController {
             // the room record from the database too as well as update the user's room status to null, meaning the user
             // does not belong to any rooms.
             if (allPlayersList.isEmpty()) {
-                roomRepository.deleteById(currentUser.getRoomId());
-                currentUser.setRoomId(null);
+                roomRepository.delete(currentRoom);
+                currentUser.setRoom(null);
                 userRepository.save(currentUser);
             }
             // However, when there are several users in the room, we should deal with the case differently. First, we
@@ -181,7 +174,7 @@ public class RoomController {
                 currentRoom.setPlayers(ConvertListtoString.convertToString(allPlayersList));
                 roomRepository.save(currentRoom);
 
-                currentUser.setRoomId(null);
+                currentUser.setRoom(null);
                 userRepository.save(currentUser);
             }
         }
@@ -195,7 +188,7 @@ public class RoomController {
             currentRoom.setPlayers(ConvertListtoString.convertToString(allPlayersList));
             roomRepository.save(currentRoom);
 
-            currentUser.setRoomId(null);
+            currentUser.setRoom(null);
             userRepository.save(currentUser);
         }
 
@@ -234,7 +227,7 @@ public class RoomController {
         Optional<Room> foundRoom = roomRepository.findById(newPlayer.getRoomID());
         if(!foundRoom.isPresent()) return Errors.NotFound("room");
 
-        if(currentUser.getRoomId() != null) return Errors.NotImplemented("You are already in a room");
+        if(currentUser.getRoom() != null) return Errors.NotImplemented("You are already in a room");
 
         Room currentRoom = foundRoom.get();
         currentRoom.setPlayers(currentRoom.getPlayers() + newPlayer.getUsername() + " ");

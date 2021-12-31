@@ -69,8 +69,7 @@ public class MultiGameController {
         // Check equal token
         if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
         String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
-        if(!serverToken.equals(user.getToken()))
-            return Errors.NotImplemented("Tokens do not match");
+        if(!serverToken.equals(user.getToken())) return Errors.NotImplemented("Tokens do not match");
         currentUser.setStatus(DateUtilis.getCurrentDate());
 
         Optional<Room> foundRoom = roomRepository.findById(roomID);
@@ -90,7 +89,7 @@ public class MultiGameController {
         //Check if the current user is indeed player 1 or 2, otherwise refuse to start the game
         if(Player1.getUsername().equals(user.getUsername())) {
             if (currentRoom.isPlayerOneReady()) {
-                if (currentRoom.isPlayerTwoReady()) return Errors.NotImplemented("The game has started!", );
+                if (currentRoom.isPlayerTwoReady()) return Errors.NotImplemented("The game has started!");
                 else {
                     currentRoom.setPlayerOneReady(false);
                     roomRepository.save(currentRoom);
@@ -124,8 +123,7 @@ public class MultiGameController {
         }
 
         // Find the host of the room
-        var foundHost = userRepository.findByUsername(currentRoom.getHost());
-        User host = foundHost.get(0);
+        User host = currentRoom.getHost();
         
         // Create a multiplayer game record to save in the database
         MultiGame multiGame = new MultiGame();
@@ -158,7 +156,9 @@ public class MultiGameController {
         multiGameRepository.save(multiGame);
         userRepository.save(Player1);
         userRepository.save(Player2);
-        currentRoom.
+
+        currentRoom.setGame(multiGame);
+        roomRepository.save(currentRoom);
 
         return Success.WithData("Create game successfully", multiGame);
     }
@@ -216,7 +216,7 @@ public class MultiGameController {
      * @return errors if failed. Otherwise, a response that acknowledges the move.
      */
     @PostMapping("/playMultiplayer/{gameID}")
-    public ResponseEntity<Response> playOnline(@PathVariable long gameID, @RequestBody MultiplayerMove playerMove) {
+    public ResponseEntity<Response> playOnline(@PathVariable long gameID, @RequestBody Move playerMove) {
         // Check null token
         if(playerMove.getToken() == null)
             return Errors.NotImplemented("Token cannot be null");

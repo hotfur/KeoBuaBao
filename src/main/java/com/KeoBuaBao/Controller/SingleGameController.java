@@ -18,6 +18,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * A class controls the single game function
+ * @author Than Doan Thuan
+ * @author Vuong Kha Sieu
+ * @author Doan Duc Nguyen Long
+ * @author Nguyen Van Trang
+ */
 @RestController
 @RequestMapping("/single_game")
 public class SingleGameController {
@@ -26,11 +33,20 @@ public class SingleGameController {
     @Autowired
     private UserRepository userRepository;
 
+    /**
+     * Get all single game has been played
+     * @return a list containing all single games
+     */
     @GetMapping("")
     public List<SingleGame> getAllSingleGame() {
         return singleGameRepository.findAll();
     }
 
+    /**
+     * Get all single game of a specified user
+     * @param user the user wants to see
+     * @return all single games related to that user
+     */
     @GetMapping("/get_player_single_game")
     public ResponseEntity<Response> getOnePlayerSingleGame(@RequestBody User user) {
         // Check null token
@@ -53,6 +69,7 @@ public class SingleGameController {
             return Errors.NotImplemented("Tokens do not match");
         currentUser.setStatus(DateUtilis.getCurrentDate());
 
+        // Get the list of all single game in the database
         List<SingleGame> foundSinglegame = currentUser.getSingleGame();
         if(!foundSinglegame.isEmpty())
             return Success.WithData("Here is all of the game from the user" , foundSinglegame);
@@ -60,6 +77,11 @@ public class SingleGameController {
             return Errors.NotFound("user");
     }
 
+    /**
+     * Create a new single game for a specified player
+     * @param user the player wants to play new game
+     * @return a response entity to notify whether the game is created successfully or not
+     */
     @PostMapping("")
     public ResponseEntity<Response> createSingleGame(@RequestBody User user) {
         if (user.getUsername() == null) return Errors.NotFound("user");

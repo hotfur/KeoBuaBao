@@ -57,16 +57,39 @@ public class UserController {
 
     /**
      * An API to get one user information
-     * @param id the user ID (this is a path variable)
+     * @param user the user information: usernamea and token authentication
      * @return a response entity represents a given user information
      */
-    @GetMapping("{id}")
-    public ResponseEntity<Response> getOneUser(@PathVariable long id) {
-        Optional<User> foundUser = userRepository.findById(id);
-        if(foundUser.isPresent())
-            return Success.WithData("This user is found", foundUser);
-        else
+    @GetMapping("/get_one_user")
+    public ResponseEntity<Response> getOneUser(@RequestBody User user) {
+        // Check null token
+        if(user.getToken() == null)
+            return Errors.NotImplemented("Token cannot be null");
+
+        // Check null datetime
+        if(user.getStatus() == null)
+            return Errors.NotImplemented("Datetime cannot be null");
+
+        // Check null username
+        if (user.getUsername() == null)
             return Errors.NotFound("user");
+
+        // Find the corresponding user information with the given username.
+        List<User> foundUser = userRepository.findByUsername(user.getUsername());
+        // Catch an error when the user cannot be found
+        if (foundUser.isEmpty())
+            return Errors.NotFound("user");
+
+        User currentUser = foundUser.get(0);
+        // Check equal token or whether token is expired from the most recent login attempt.
+        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus()))
+            return Errors.Expired("token");
+        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
+        if(!serverToken.equals(user.getToken()))
+            return Errors.NotImplemented("Tokens do not match");
+        currentUser.setStatus(DateUtilis.getCurrentDate());
+
+        return Success.WithData("This user is found", currentUser);
     }
 
     /**

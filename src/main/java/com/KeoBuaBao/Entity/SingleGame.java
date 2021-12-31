@@ -26,11 +26,11 @@ public class SingleGame {
     @JsonIgnore
     private User user;
 
-    private Long dateTime = DateUtilis.getCurrentDate();
-    private Long timePerMove;
-    private Long numberOfRounds;
-    private Long difficulty;
-    private String result = "";
-    private String moves = ""; // The field cannot be the list. Change to String by comma delimiter.
-    private String computerMoves = "";
+    private Long dateTime = DateUtilis.getCurrentDate(); // Current date time of the single game
+    private Long timePerMove; // A time for each move in a single game
+    private Long numberOfRounds; // Total rounds in a single game
+    private Long difficulty; // There will be tentatively two modes. Easy with random and Hard with Machine Learning
+    private String result = ""; // The result of all rounds
+    private String moves = ""; // All moves played by the user
+    private String computerMoves = ""; // All moves played by the computer
 }
