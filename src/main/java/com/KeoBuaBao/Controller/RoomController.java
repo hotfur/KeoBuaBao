@@ -1,8 +1,10 @@
 package com.KeoBuaBao.Controller;
 
+import com.KeoBuaBao.Entity.MultiGame;
 import com.KeoBuaBao.Entity.Room;
 import com.KeoBuaBao.Entity.User;
 import com.KeoBuaBao.HelperClass.*;
+import com.KeoBuaBao.Repository.MultiGameRepository;
 import com.KeoBuaBao.Repository.RoomRepository;
 import com.KeoBuaBao.Repository.UserRepository;
 import com.KeoBuaBao.Responses.*;
@@ -30,6 +32,8 @@ public class RoomController {
     private UserRepository userRepository;
     @Autowired
     private RoomRepository roomRepository;
+    @Autowired
+    private MultiGameRepository multiGameRepository;
 
     /**
      * Return a response entity error if a unique object (username, password, etc) is empty
@@ -140,19 +144,62 @@ public class RoomController {
         // Catch the error when the room is not found
         if(currentRoom == null) return Errors.NotFound("the room belong to this user");
 
+        // Another case is that the user can either in player seat one or two, so make sure to delete (make null) to
+        // the seat appropriately too.
+        // If there is a game already in process and the user wants to quit is the player, then he loses.
+        MultiGame currentGame = currentRoom.getGame();
+        if (currentGame != null) {
+            if (currentRoom.getPlayerOne() != null && currentRoom.getPlayerOne().equals(user.getUsername())) {
+                currentGame.setAbort1(true);
+                multiGameRepository.save(currentGame);
+
+                currentRoom.setPlayerOne(null);
+                currentRoom.setPlayerOneReady(false);
+                currentRoom.setPlayerTwoReady(false);
+                currentRoom.setGame(null);
+
+                currentUser.setLoss(currentUser.getLoss()+1);
+                User oppponent = userRepository.findByUsername(currentRoom.getPlayerTwo()).get(0);
+                oppponent.setWin(oppponent.getWin()+1);
+                userRepository.save(currentUser);
+                userRepository.save(oppponent);
+            }
+
+            if (currentRoom.getPlayerTwo() != null && currentRoom.getPlayerTwo().equals(user.getUsername())) {
+                currentGame.setAbort2(true);
+                multiGameRepository.save(currentGame);
+
+                currentRoom.setPlayerTwo(null);
+                currentRoom.setPlayerOneReady(false);
+                currentRoom.setPlayerTwoReady(false);
+                currentRoom.setGame(null);
+
+                currentUser.setLoss(currentUser.getLoss()+1);
+                User oppponent = userRepository.findByUsername(currentRoom.getPlayerOne()).get(0);
+                oppponent.setWin(oppponent.getWin()+1);
+                userRepository.save(currentUser);
+                userRepository.save(oppponent);
+            }
+        }
+        else {
+            if (currentRoom.getPlayerOne() != null && currentRoom.getPlayerOne().equals(user.getUsername())) {
+                currentRoom.setPlayerOne(null);
+                currentRoom.setPlayerTwoReady(false);
+                currentRoom.setPlayerOneReady(false);
+            }
+
+            if (currentRoom.getPlayerTwo() != null && currentRoom.getPlayerTwo().equals(user.getUsername())) {
+                currentRoom.setPlayerTwo(null);
+                currentRoom.setPlayerTwoReady(false);
+                currentRoom.setPlayerOneReady(false);
+            }
+        }
+
+        roomRepository.save(currentRoom); // Update the room information entity when done
+
         String allPlayers = currentRoom.getPlayers();
         // Get the list of all members in the room
         var allPlayersList = PlayersListUtilis.getAllPlayers(allPlayers);
-
-        // Another case is that the user can either in player seat one or two, so make sure to delete (make null) to
-        // the seat appropriately too.
-        if(currentRoom.getPlayerOne() != null && currentRoom.getPlayerOne().equals(user.getUsername()))
-            currentRoom.setPlayerOne(null);
-
-        if(currentRoom.getPlayerTwo() != null && currentRoom.getPlayerTwo().equals(user.getUsername()))
-            currentRoom.setPlayerTwo(null);
-
-        roomRepository.save(currentRoom); // Update the room information entity when done
 
         // Check if this player is the host
         if (user.getUsername().equals(currentRoom.getHost())) {

@@ -34,4 +34,6 @@ public class MultiGame {
     private Long numberRounds; // The number of rounds in a game
     private String resultOne = ""; // Result of player one in all rounds
     private String resultTwo = ""; // Result of player two in all rounds
+    private boolean abort1 = false; // The game is aborted by player 1
+    private boolean abort2 = false; // The game is aborted by player 2
 }

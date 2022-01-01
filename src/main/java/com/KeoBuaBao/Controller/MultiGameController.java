@@ -244,10 +244,6 @@ public class MultiGameController {
         MultiGame currentMultigame = currentRoom.getGame();
         if (currentMultigame == null) return Errors.NotImplemented("No game is being played at the moment");
 
-        if(currentMultigame.getResultOne().length() >= currentMultigame.getNumberRounds()) {
-            return Errors.NotImplemented("The game is over!");
-        }
-
 
         int playerPosition;
         if (playerMove.getUsername().equals(currentRoom.getPlayerOne())) playerPosition = 0;
@@ -277,6 +273,44 @@ public class MultiGameController {
             currentMultigame.setResultOne(currentMultigame.getResultOne() + resultList.get(0));
             currentMultigame.setResultTwo(currentMultigame.getResultTwo() + resultList.get(1));
             multiGameRepository.save(currentMultigame);
+
+            // If this is the ending move, then reset the ready counter and disassociate the current game
+            // with this room, allowing players to play more games.
+
+            //We have to update the final result of the match into user database too
+            if (currentMultigame.getResultOne().length() >= currentMultigame.getNumberRounds()) {
+                currentRoom.setPlayerOneReady(false);
+                currentRoom.setPlayerTwoReady(false);
+                currentRoom.setGame(null);
+                roomRepository.save(currentRoom);
+
+                User player1 = playerMultiGameList.get(0).getUser();
+                User player2 = playerMultiGameList.get(1).getUser();
+                long countWin = 0;
+                long countLose = 0;
+                String result = currentMultigame.getResultOne();
+                for(int i = 0; i < result.length(); i++) {
+                    if(result.charAt(i) == '+')
+                        countWin++;
+                    else if(result.charAt(i) == '-')
+                        countLose++;
+                }
+
+                if (countWin > countLose) {
+                    player1.setWin(player1.getWin()+1);
+                    player2.setLoss(player2.getLoss()+1);
+                }
+                else if (countLose > countWin) {
+                    player2.setWin(player2.getWin()+1);
+                    player1.setLoss(player1.getLoss()+1);
+                }
+                else {
+                    player1.setTie(player1.getTie()+1);
+                    player2.setTie(player2.getTie()+1);
+                }
+                userRepository.save(player1);
+                userRepository.save(player2);
+            }
         }
         return Success.NoData("Send move success! Please wait for the round to end");
     }
