@@ -42,8 +42,11 @@ public class User {
     private Long timePerMove; // Time to take a decision of rock/paper/scissors
     private Long numberRound; // The number of rounds in a game
     private Long difficulty; // The difficulty of the game. It is used to play with Machine Learning
-    @Transient
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
     private Room room; // The room that the user belongs to
+
     private Long status; // Online/Offline x minutes ago. Compare with 30 minutes. Status also saves the Datetime call from Front end.
     private Long winSingle; // Number of win in all single matches with the computer
     private Long drawSingle; // Number of tie in all single matches with the computer

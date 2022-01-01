@@ -50,7 +50,7 @@ public class MultiGameController {
      * @param user either player one or two can start the game.
      * @return errors if failed. success status to indicate the game has been started.
      */
-    @PostMapping("")
+    @PostMapping("/start")
     public ResponseEntity<Response> createMutiplayer(@RequestBody User user) {
         // Check null token
         if(user.getToken() == null) return Errors.NotImplemented("Token cannot be null");
@@ -328,6 +328,7 @@ public class MultiGameController {
         else if (user.getUsername().equals(currentRoom.getPlayerTwo())) playerPosition = 1;
 
         // Get the round result
+        if (resultOne.isEmpty()) return Success.NoData("First round has not finished");
         char roundResultOne = resultOne.charAt(resultOne.length() - 1);
         if (playerPosition != -1) {
             if (playerMultiGameList.get(0).getMoves().length() == playerMultiGameList.get(1).getMoves().length()) {
