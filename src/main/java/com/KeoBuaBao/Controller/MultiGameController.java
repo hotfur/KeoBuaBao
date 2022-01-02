@@ -142,6 +142,9 @@ public class MultiGameController {
         
         // Create a multiplayer game record to save in the database
         MultiGame multiGame = new MultiGame();
+        multiGame.setHost(currentRoom.getHost());
+        multiGame.setPlayer1(currentRoom.getPlayerOne());
+        multiGame.setPlayer2(currentRoom.getPlayerTwo());
         multiGame.setTimePerMove(host.getTimePerMove());
         multiGame.setNumberRounds(host.getNumberRound());
 
@@ -359,8 +362,11 @@ public class MultiGameController {
         List<PlayerMultiGame> foundPlayerMultiGame = currentUser.getPlayerMultiGame();
         if (!foundPlayerMultiGame.isEmpty()) {
             // Fetch them from database
-            for (int i = 0; i < foundPlayerMultiGame.size(); i++) foundPlayerMultiGame.set(i, Hibernate.unproxy(foundPlayerMultiGame.get(i), PlayerMultiGame.class));
-            return Success.WithData("Here is all of the game from the user" , foundPlayerMultiGame);
+            List<MultiGame> foundMultiGame = new ArrayList<>();
+            for (PlayerMultiGame playerMultiGame : foundPlayerMultiGame) {
+                foundMultiGame.add(Hibernate.unproxy(playerMultiGame.getMultiGame(), MultiGame.class));
+            }
+            return Success.WithData("Here is all of the game from the user" , foundMultiGame);
         }
         else
             return Errors.NotFound("user");

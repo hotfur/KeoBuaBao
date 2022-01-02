@@ -22,13 +22,16 @@ import java.util.List;
 public class MultiGame {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "multiGame", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<PlayerMultiGame> PlayerMultiGame = new ArrayList<PlayerMultiGame>(); // A list containing two players of a multiplayer game
-    
+
+    private String host;
+    private String player1;
+    private String player2;
     private Long dateTime = DateUtilis.getCurrentDate(); // Get the current time of the game
     private Long timePerMove; // The time for each move decision
     private Long numberRounds; // The number of rounds in a game

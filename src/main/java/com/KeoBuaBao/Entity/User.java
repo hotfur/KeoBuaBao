@@ -20,7 +20,7 @@ import java.util.ArrayList;
 @Getter @Setter @RequiredArgsConstructor()
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // This is the primary key
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")

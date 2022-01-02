@@ -19,7 +19,7 @@ import javax.persistence.*;
 @Setter @Getter @RequiredArgsConstructor()
 public class Room {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String host; // The host of the room. There is only one host in each room.
