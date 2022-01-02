@@ -221,31 +221,29 @@ public class UserController {
         if(foundUser.isEmpty()) return Errors.NotFound("username");
 
         User currentUser = foundUser.get(0);
-        // Get server token for the user.
-        String serverToken;
+        // Save the current time so generated token and datetime do not mismatch
+        Long sys_time = DateUtilis.getCurrentDate();
 
         // Auto-renew token if eligible.
-        if (user.getStatus() != null && user.getToken() != null && DateUtilis.eligibleToRenew(currentUser.getStatus(), user.getStatus())) {
-            serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
-            if(user.getToken().equals(serverToken)) {
-                serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), DateUtilis.getCurrentDate());
-                currentUser.setStatus(DateUtilis.getCurrentDate());
+        if (user.getStatus() != null &&
+                user.getToken() != null && 
+                DateUtilis.eligibleToRenew(currentUser.getStatus(), user.getStatus()) &&
+                user.getToken().equals(SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus())))
+        {
+                currentUser.setStatus(sys_time);
                 userRepository.save(currentUser);
-                currentUser.setToken(serverToken);
+                currentUser.setToken(SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), sys_time));
                 return Success.WithData("Correct", currentUser);
-            }
         }
 
         if (user.getPassword() == null) return Errors.NotImplemented("Password cannot be empty");
         // Otherwise, authenticate using traditional password
-        List<User> foundUserList = userRepository.findByUsernameAndPassword(user.getUsername(), SecurityUtils.hashPassword(user.getPassword()));
-        if (foundUserList.size() > 0) {
-            User userRecord = foundUserList.get(0);
-            serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), DateUtilis.getCurrentDate());
-            userRecord.setToken(serverToken);
-            currentUser.setStatus(DateUtilis.getCurrentDate());
+        if (SecurityUtils.hashPassword(user.getPassword())
+                .equals(currentUser.getPassword())) {
+            currentUser.setStatus(sys_time);
             userRepository.save(currentUser);
-            return Success.WithData("Correct", userRecord);
+            currentUser.setToken(SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), sys_time));
+            return Success.WithData("Correct", currentUser);
         }
 
         return Errors.NotImplemented("Incorrect username or password");
