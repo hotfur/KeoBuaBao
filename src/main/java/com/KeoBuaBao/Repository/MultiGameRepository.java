@@ -8,6 +8,4 @@ import java.util.List;
 
 @Repository
 public interface MultiGameRepository extends JpaRepository<MultiGame, Long> {
-    List<MultiGame> findByPlayerMultiGame_User_DeletedIsTrue();
-    List<MultiGame> findByPlayerMultiGame_User_DeletedIsFalse();
 }

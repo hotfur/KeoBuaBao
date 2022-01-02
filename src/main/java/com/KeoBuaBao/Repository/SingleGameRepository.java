@@ -8,6 +8,4 @@ import java.util.List;
 
 @Repository
 public interface SingleGameRepository extends JpaRepository<SingleGame, Long> {
-    List<SingleGame> findByUser_DeletedIsTrue();
-    List<SingleGame> findByUser_DeletedIsFalse();
 }
