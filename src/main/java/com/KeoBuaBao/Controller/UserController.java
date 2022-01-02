@@ -45,6 +45,8 @@ public class UserController {
         if(foundUser.isEmpty()) return Errors.NotFound("user");
 
         User currentUser = foundUser.get(0); // Get the corresponding user record
+        //Check for deleted account
+        if (currentUser.isDeleted()) return Errors.NotImplemented("This user has permanently deleted their account");
         // Check equal token
         if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
         String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
@@ -202,8 +204,12 @@ public class UserController {
         Object check = userCheck(user);
         if (check instanceof ResponseEntity) return (ResponseEntity<Response>) check;
         User currentUser = ((User) check);
-
-        userRepository.deleteById(currentUser.getId());
+        if (currentUser.getRoom()!=null) return Errors.NotImplemented("Please quit the game room before deleting your account");
+        
+        currentUser.setEmail(null);
+        currentUser.setPassword(null);
+        currentUser.setDeleted(true);
+        userRepository.save(currentUser);
         return Success.NoData("Delete user successfully");
     }
 
@@ -221,6 +227,9 @@ public class UserController {
         if(foundUser.isEmpty()) return Errors.NotFound("username");
 
         User currentUser = foundUser.get(0);
+
+        //Check for deleted account
+        if (currentUser.isDeleted()) return Errors.NotImplemented("This user has permanently deleted their account");
         // Save the current time so generated token and datetime do not mismatch
         Long sys_time = DateUtilis.getCurrentDate();
 

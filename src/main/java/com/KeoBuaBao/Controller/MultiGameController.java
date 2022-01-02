@@ -57,6 +57,8 @@ public class MultiGameController {
         if(foundUser.isEmpty()) return Errors.NotFound("user");
 
         User currentUser = foundUser.get(0); // Get the corresponding user record
+        // Check for deleted account
+        if (currentUser.isDeleted()) return Errors.NotImplemented("This user has permanently deleted their account");
         // Check equal token
         if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
         String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
@@ -368,7 +370,6 @@ public class MultiGameController {
             }
             return Success.WithData("Here is all of the game from the user" , foundMultiGame);
         }
-        else
-            return Errors.NotFound("user");
+        else return Errors.NotFound("games");
     }
 }

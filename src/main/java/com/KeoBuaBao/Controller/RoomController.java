@@ -55,6 +55,8 @@ public class RoomController {
         if(foundUser.isEmpty()) return Errors.NotFound("user");
 
         User currentUser = foundUser.get(0); // Get the corresponding user record
+        //Check for deleted account
+        if (currentUser.isDeleted()) return Errors.NotImplemented("This user has permanently deleted their account");
         // Check equal token
         if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
         String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
@@ -194,7 +196,12 @@ public class RoomController {
             // Deal with the case when the user is the last member to quit the room. With that, the server will delete
             // the room record from the database too as well as update the user's room status to null, meaning the user
             // does not belong to any rooms.
-            if (allPlayersList.isEmpty()) roomRepository.delete(currentRoom);
+            if (allPlayersList.isEmpty()) {
+                //Have to set the user room to null before deleting the room
+                currentUser.setRoom(null);
+                userRepository.save(currentUser);
+                roomRepository.delete(currentRoom);
+            }
             // However, when there are several users in the room, we should deal with the case differently. First, we
             // will randomly assign the host. In this case, we will assign to the last member because remove the last
             // element from the list takes O(1) time complexity, which is cheap to do. After deletion, update the

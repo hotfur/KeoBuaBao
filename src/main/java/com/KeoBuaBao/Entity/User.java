@@ -20,7 +20,7 @@ import java.util.ArrayList;
 @Getter @Setter @RequiredArgsConstructor()
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id; // This is the primary key
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
@@ -34,6 +34,7 @@ public class User {
     private String username; // User's username
     private String email; // User's email
     private String password; // User's password
+    private boolean deleted = false; // true if the account was deleted
     private Long win; // Number of win in all multiplayer matches
     private Long tie; // Number of tie in all multiplayer matches
     private Long loss; // Number of losing game in all multiplayer matches

@@ -19,7 +19,7 @@ import javax.persistence.*;
 @Getter @Setter @RequiredArgsConstructor()
 public class SingleGame {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
