@@ -134,34 +134,34 @@ public class SingleGameController {
 
     /**
      * Allow the player to make moves with a random number generator
-     * @param playerMove an entity that includes both player authentication and move information
+     * @param user an entity that includes both player authentication and move information
      * @return errors if failed, match result if success
      */
     @PostMapping("/play_single")
-    public ResponseEntity<Response> playWithComputer(@RequestBody Move playerMove) {
+    public ResponseEntity<Response> playWithComputer(@RequestBody User user) {
         // Check null token
-        if(playerMove.getToken() == null)
+        if(user.getToken() == null)
             return Errors.NotImplemented("Token cannot be null");
 
         // Check null datetime
-        if(playerMove.getStatus() == null)
+        if(user.getStatus() == null)
             return Errors.NotImplemented("Datetime cannot be null");
 
-        List<User> foundUser = userRepository.findByUsername(playerMove.getUsername());
+        List<User> foundUser = userRepository.findByUsername(user.getUsername());
         if(foundUser.isEmpty())
             return Errors.NotFound("user");
 
         User currentUser = foundUser.get(0);
         // Check equal token
-        if (DateUtilis.isTokenExpired(currentUser.getStatus(), playerMove.getStatus())) return Errors.Expired("token");
-        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), playerMove.getStatus());
-        if(!serverToken.equals(playerMove.getToken()))
+        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
+        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
+        if(!serverToken.equals(user.getToken()))
             return Errors.NotImplemented("Tokens do not match");
         currentUser.setStatus(DateUtilis.getCurrentDate());
 
         long computerMove = RandomUtilis.getRandom(1L, 3L);
 
-        if(playerMove.getMove() < 1 || playerMove.getMove() > 3) return Errors.NotImplemented("Illegal move");
+        if(user.getMove() < 1 || user.getMove() > 3) return Errors.NotImplemented("Illegal move");
 
         SingleGame currentSingleGame = currentUser.getCurrentSingleGame();
         if(currentSingleGame == null)
@@ -170,7 +170,6 @@ public class SingleGameController {
         // The condition to check when the game is over
         if(currentSingleGame.getResult().length() >= currentSingleGame.getNumberOfRounds()) {
             long countWin = 0;
-            long countDraw = 0;
             long countLose = 0;
             String result = currentSingleGame.getResult();
             for(int i = 0; i < result.length(); i++) {
@@ -178,11 +177,7 @@ public class SingleGameController {
                     countWin++;
                 else if(result.charAt(i) == '-')
                     countLose++;
-                else if(result.charAt(i) == '0')
-                    countDraw++;
             }
-
-            DetailResult detailResult = new DetailResult(countWin, countDraw, countLose);
 
             // Update single record for the user
             if(countWin > countLose)
@@ -194,14 +189,14 @@ public class SingleGameController {
 
             currentUser.setCurrentSingleGame(null);
             userRepository.save(currentUser);
-            return Errors.NotImplemented("Game over!", detailResult);
+            return Errors.NotImplemented("Game over!", currentSingleGame);
         }
 
 
         // Player one is the user whereas player two is the computer when passing.
-        var resultList = DetermineResult.announceResult(playerMove.getMove(), computerMove);
+        var resultList = DetermineResult.announceResult(user.getMove(), computerMove);
 
-        currentSingleGame.setMoves(currentSingleGame.getMoves() + playerMove.getMove());
+        currentSingleGame.setMoves(currentSingleGame.getMoves() + user.getMove());
         currentSingleGame.setComputerMoves(currentSingleGame.getComputerMoves() + computerMove);
         currentSingleGame.setResult(currentSingleGame.getResult() + resultList.get(0));
         singleGameRepository.save(currentSingleGame);

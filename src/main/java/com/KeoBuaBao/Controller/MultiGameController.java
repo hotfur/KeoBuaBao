@@ -160,35 +160,35 @@ public class MultiGameController {
 
     /**
      * Allow player to make a move in a multiplayer game
-     * @param playerMove an entity contains the player authentication and move information
+     * @param user an entity contains the player authentication and move information
      * @return errors if failed. Otherwise, a response that acknowledges the move.
      */
     @PostMapping("/play")
-    public ResponseEntity<Response> playOnline(@RequestBody Move playerMove) {
+    public ResponseEntity<Response> playOnline(@RequestBody User user) {
         // Check null token
-        if(playerMove.getToken() == null)
+        if(user.getToken() == null)
             return Errors.NotImplemented("Token cannot be null");
 
         // Check null datetime
-        if(playerMove.getStatus() == null)
+        if(user.getStatus() == null)
             return Errors.NotImplemented("Datetime cannot be null");
 
         // Check for null user
-        if (playerMove.getUsername() == null) return Errors.NotFound("user");
+        if (user.getUsername() == null) return Errors.NotFound("user");
 
         //Check for illegal moves
-        if(playerMove.getMove() < 1 || playerMove.getMove() > 3) {
+        if(user.getMove() < 1 || user.getMove() > 3) {
             return Errors.NotImplemented("Illegal move");
         }
 
-        List<User> foundUser = userRepository.findByUsername(playerMove.getUsername());
+        List<User> foundUser = userRepository.findByUsername(user.getUsername());
         if (foundUser.isEmpty()) return Errors.NotFound("user");
 
         User currentUser = foundUser.get(0);
         // Check equal token
-        if (DateUtilis.isTokenExpired(currentUser.getStatus(), playerMove.getStatus())) return Errors.Expired("token");
-        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), playerMove.getStatus());
-        if(!serverToken.equals(playerMove.getToken()))
+        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
+        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
+        if(!serverToken.equals(user.getToken()))
             return Errors.NotImplemented("Tokens do not match");
         currentUser.setStatus(DateUtilis.getCurrentDate());
         userRepository.save(currentUser);
@@ -200,8 +200,8 @@ public class MultiGameController {
 
 
         int playerPosition;
-        if (playerMove.getUsername().equals(currentRoom.getPlayerOne())) playerPosition = 0;
-        else if (playerMove.getUsername().equals(currentRoom.getPlayerTwo())) playerPosition = 1;
+        if (user.getUsername().equals(currentRoom.getPlayerOne())) playerPosition = 0;
+        else if (user.getUsername().equals(currentRoom.getPlayerTwo())) playerPosition = 1;
         else return Errors.NotImplemented("You are not a player");
 
         var playerMultiGameList = currentMultigame.getPlayerMultiGame();
@@ -213,7 +213,7 @@ public class MultiGameController {
         if (currentPlayer_MoveNumber > opponentPlayer_MoveNumber)
             return Errors.NotImplemented("Move already sent! Please wait for the round to end");
 
-        currentPlayerMultiGame.setMoves(currentPlayerMultiGame.getMoves() + playerMove.getMove());
+        currentPlayerMultiGame.setMoves(currentPlayerMultiGame.getMoves() + user.getMove());
         PlayerMultiGameRepository.save(currentPlayerMultiGame);
 
         if (currentPlayer_MoveNumber + 1 <= opponentPlayer_MoveNumber) {

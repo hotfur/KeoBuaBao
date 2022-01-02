@@ -58,4 +58,10 @@ public class User {
 
     @Transient
     private String token; // Token authentication: Not store in the database
+    @Transient
+    private int playerPosition; // The player position seat of the user, either player one or two.
+    @Transient
+    private Long roomID; // Room ID to join
+    @Transient
+    private Long move; // The moving request, either Rock, Paper, or Scissors
 }

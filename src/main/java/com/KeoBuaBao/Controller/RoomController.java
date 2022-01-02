@@ -238,40 +238,40 @@ public class RoomController {
 
     /**
      * Add a user to a room as a spectator. Requires authentication.
-     * @param newPlayer User who wishes to join a room
+     * @param user User who wishes to join a room
      * @return errors if failed. success status to indicate the user successfully enter the room.
      */
     @PostMapping("/join_room")
-    public ResponseEntity<Response> joinRoom(@RequestBody JoinRoom newPlayer) {
-        if (newPlayer.getUsername() == null) return EmptyError("Username");
-        if(newPlayer.getRoomID() == null) return EmptyError("Room id");
+    public ResponseEntity<Response> joinRoom(@RequestBody User user) {
+        if (user.getUsername() == null) return EmptyError("Username");
+        if(user.getRoomID() == null) return EmptyError("Room id");
 
         // Check null token
-        if(newPlayer.getToken() == null)
+        if(user.getToken() == null)
             return Errors.NotImplemented("Token cannot be null");
 
         // Check null datetime
-        if(newPlayer.getStatus() == null)
+        if(user.getStatus() == null)
             return Errors.NotImplemented("Datetime cannot be null");
 
-        List<User> foundUser = userRepository.findByUsername(newPlayer.getUsername());
+        List<User> foundUser = userRepository.findByUsername(user.getUsername());
         if (foundUser.isEmpty()) return Errors.NotFound("user");
 
         User currentUser = foundUser.get(0);
         // Check equal token
-        if (DateUtilis.isTokenExpired(currentUser.getStatus(), newPlayer.getStatus())) return Errors.Expired("token");
-        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), newPlayer.getStatus());
-        if(!serverToken.equals(newPlayer.getToken()))
+        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
+        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
+        if(!serverToken.equals(user.getToken()))
             return Errors.NotImplemented("Tokens do not match");
         currentUser.setStatus(DateUtilis.getCurrentDate());
 
-        Optional<Room> foundRoom = roomRepository.findById(newPlayer.getRoomID());
+        Optional<Room> foundRoom = roomRepository.findById(user.getRoomID());
         if(!foundRoom.isPresent()) return Errors.NotFound("room");
 
         if(currentUser.getRoom() != null) return Errors.NotImplemented("You are already in a room");
 
         Room currentRoom = foundRoom.get();
-        currentRoom.setPlayers(currentRoom.getPlayers() + newPlayer.getUsername() + " ");
+        currentRoom.setPlayers(currentRoom.getPlayers() + user.getUsername() + " ");
         roomRepository.save(currentRoom);
 
         currentUser.setRoom(currentRoom);
@@ -282,30 +282,30 @@ public class RoomController {
 
     /**
      * Makes a spectator becomes a player in the room.
-     * @param newPlayer the spectator in the room who wishes to become a player
+     * @param user the spectator in the room who wishes to become a player
      * @return errors if failed. success status to indicate the user successfully became player.
      */
     @PostMapping("/enter_play_seat")
-    public ResponseEntity<Response> joinPlaySeat(@RequestBody EnterGame newPlayer) {
-        if (newPlayer.getUsername() == null) return EmptyError("Username");
+    public ResponseEntity<Response> joinPlaySeat(@RequestBody User user) {
+        if (user.getUsername() == null) return EmptyError("Username");
 
         // Check null token
-        if(newPlayer.getToken() == null)
+        if(user.getToken() == null)
             return Errors.NotImplemented("Token cannot be null");
 
         // Check null datetime
-        if(newPlayer.getStatus() == null)
+        if(user.getStatus() == null)
             return Errors.NotImplemented("Datetime cannot be null");
 
         // Find the user
-        List<User> foundUser = userRepository.findByUsername(newPlayer.getUsername());
+        List<User> foundUser = userRepository.findByUsername(user.getUsername());
         if (foundUser.isEmpty()) return Errors.NotFound("user");
 
         User currentUser = foundUser.get(0);
         // Check equal token
-        if (DateUtilis.isTokenExpired(currentUser.getStatus(), newPlayer.getStatus())) return Errors.Expired("token");
-        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), newPlayer.getStatus());
-        if(!serverToken.equals(newPlayer.getToken()))
+        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
+        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
+        if(!serverToken.equals(user.getToken()))
             return Errors.NotImplemented("Tokens do not match");
         currentUser.setStatus(DateUtilis.getCurrentDate());
 
@@ -313,30 +313,30 @@ public class RoomController {
         if(currentUser.getRoom() == null)
             return Errors.NotImplemented("You are not belonged to any rooms");
 
-        if(newPlayer.getPlayerPosition() != 1 && newPlayer.getPlayerPosition() != 2)
+        if(user.getPlayerPosition() != 1 && user.getPlayerPosition() != 2)
             return Errors.NotImplemented("Invalid seat, only seat number one or two");
 
-        if(currentRoom.getPlayerOne() != null && currentRoom.getPlayerOne().equals(newPlayer.getUsername()))
+        if(currentRoom.getPlayerOne() != null && currentRoom.getPlayerOne().equals(user.getUsername()))
             return Errors.NotImplemented("You are already in seat one");
 
-        if(currentRoom.getPlayerTwo() != null && currentRoom.getPlayerTwo().equals(newPlayer.getUsername()))
+        if(currentRoom.getPlayerTwo() != null && currentRoom.getPlayerTwo().equals(user.getUsername()))
             return Errors.NotImplemented("You are already in seat two");
 
-        if(newPlayer.getPlayerPosition() == 1) {
+        if(user.getPlayerPosition() == 1) {
             if(currentRoom.getPlayerOne() == null)
-                currentRoom.setPlayerOne(newPlayer.getUsername());
+                currentRoom.setPlayerOne(user.getUsername());
             else
                 return Errors.NotImplemented("Seat is already occupied");
         }
 
         else {
             if(currentRoom.getPlayerTwo() == null)
-                currentRoom.setPlayerTwo(newPlayer.getUsername());
+                currentRoom.setPlayerTwo(user.getUsername());
             else return Errors.NotImplemented("Seat is already occupied");
         }
 
         roomRepository.save(currentRoom);
-        return Success.NoData("You are now player " + newPlayer.getPlayerPosition());
+        return Success.NoData("You are now player " + user.getPlayerPosition());
     }
 
     /**
