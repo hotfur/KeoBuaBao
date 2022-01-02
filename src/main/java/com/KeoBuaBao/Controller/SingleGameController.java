@@ -10,11 +10,13 @@ import com.KeoBuaBao.Utility.DateUtilis;
 import com.KeoBuaBao.Utility.DetermineResult;
 import com.KeoBuaBao.Utility.RandomUtilis;
 import com.KeoBuaBao.Utility.SecurityUtils;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -71,6 +73,8 @@ public class SingleGameController {
 
         // Get the list of all single game in the database
         List<SingleGame> foundSinglegame = currentUser.getSingleGame();
+        // Fetch them from database
+        for (int i = 0; i < foundSinglegame.size(); i++) foundSinglegame.set(i, Hibernate.unproxy(foundSinglegame.get(i), SingleGame.class));
         if(!foundSinglegame.isEmpty())
             return Success.WithData("Here is all of the game from the user" , foundSinglegame);
         else
