@@ -3,16 +3,15 @@ package com.KeoBuaBao.Controller;
 import com.KeoBuaBao.Entity.MultiGame;
 import com.KeoBuaBao.Entity.Room;
 import com.KeoBuaBao.Entity.User;
-import com.KeoBuaBao.HelperClass.*;
 import com.KeoBuaBao.Repository.MultiGameRepository;
 import com.KeoBuaBao.Repository.RoomRepository;
 import com.KeoBuaBao.Repository.UserRepository;
 import com.KeoBuaBao.Responses.*;
 import com.KeoBuaBao.Utility.*;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpServerErrorException;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +34,37 @@ public class RoomController {
     private RoomRepository roomRepository;
     @Autowired
     private MultiGameRepository multiGameRepository;
+
+
+    private Object userCheck(User user) {
+        // Check null token
+        if(user.getToken() == null)
+            return Errors.NotImplemented("Token cannot be null");
+
+        // Check null datetime
+        if(user.getStatus() == null)
+            return Errors.NotImplemented("Datetime cannot be null");
+
+        // Check null username
+        if(user.getUsername() == null)
+            return Errors.NotFound("user");
+
+        // Find the corresponding user information with the given username.
+        List<User> foundUser = userRepository.findByUsername(user.getUsername());
+        // Catch an error when the user cannot be found
+        if(foundUser.isEmpty()) return Errors.NotFound("user");
+
+        User currentUser = foundUser.get(0); // Get the corresponding user record
+        // Check equal token
+        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
+        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
+        // Remember not implement the request when the tokens do not match
+        if(!serverToken.equals(user.getToken()))
+            return Errors.NotImplemented("Tokens do not match");
+        currentUser.setStatus(DateUtilis.getCurrentDate());
+        userRepository.save(currentUser);
+        return currentUser;
+    }
 
     /**
      * Return a response entity error if a unique object (username, password, etc) is empty
@@ -65,32 +95,10 @@ public class RoomController {
      */
     @PostMapping("/create_room")
     public ResponseEntity<Response> createNewRoom(@RequestBody User user) {
-        // Check null token
-        if(user.getToken() == null)
-            return Errors.NotImplemented("Token cannot be null");
-
-        // Check null datetime
-        if(user.getStatus() == null)
-            return Errors.NotImplemented("Datetime cannot be null");
-
-        // Check null username
-        if(user.getUsername() == null)
-            return Errors.NotFound("user");
-
-        // Find the corresponding user information with the given username.
-        List<User> foundUser = userRepository.findByUsername(user.getUsername());
-        // Catch an error when the user cannot be found
-        if(foundUser.isEmpty())
-            return Errors.NotFound("user");
-
-        User currentUser = foundUser.get(0); // Get the corresponding user record
-        // Check equal token
-        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
-        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
-        // Remember not implement the request when the tokens do not match
-        if(!serverToken.equals(user.getToken()))
-            return Errors.NotImplemented("Tokens do not match");
-        currentUser.setStatus(DateUtilis.getCurrentDate());
+        // Perform some basic user checking
+        Object check = userCheck(user);
+        if (check instanceof ResponseEntity) return (ResponseEntity<Response>) check;
+        User currentUser = ((User) check);
 
         // Check whether the player is already in a room
         if(currentUser.getRoom() != null) return Errors.NotImplemented("You are already in a room");
@@ -114,31 +122,10 @@ public class RoomController {
      */
     @PostMapping("/quit_room")
     public ResponseEntity<Response> quitRoom(@RequestBody User user) {
-        // Check null token
-        if(user.getToken() == null)
-            return Errors.NotImplemented("Token cannot be null");
-
-        // Check null datetime
-        if(user.getStatus() == null)
-            return Errors.NotImplemented("Datetime cannot be null");
-
-        if (user.getUsername() == null)
-            return Errors.NotFound("user");
-
-        // Find the corresponding user information with the given username.
-        List<User> foundUser = userRepository.findByUsername(user.getUsername());
-        // Catch an error when the user cannot be found
-        if (foundUser.isEmpty())
-            return Errors.NotFound("user");
-
-        User currentUser = foundUser.get(0);
-        // Check equal token or whether token is expired from the most recent login attempt.
-        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus()))
-            return Errors.Expired("token");
-        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
-        if(!serverToken.equals(user.getToken()))
-            return Errors.NotImplemented("Tokens do not match");
-        currentUser.setStatus(DateUtilis.getCurrentDate());
+        // Perform some basic user checking
+        Object check = userCheck(user);
+        if (check instanceof ResponseEntity) return (ResponseEntity<Response>) check;
+        User currentUser = ((User) check);
 
         Room currentRoom = currentUser.getRoom();
 
@@ -243,27 +230,12 @@ public class RoomController {
      */
     @PostMapping("/join_room")
     public ResponseEntity<Response> joinRoom(@RequestBody User user) {
-        if (user.getUsername() == null) return EmptyError("Username");
         if(user.getRoomID() == null) return EmptyError("Room id");
 
-        // Check null token
-        if(user.getToken() == null)
-            return Errors.NotImplemented("Token cannot be null");
-
-        // Check null datetime
-        if(user.getStatus() == null)
-            return Errors.NotImplemented("Datetime cannot be null");
-
-        List<User> foundUser = userRepository.findByUsername(user.getUsername());
-        if (foundUser.isEmpty()) return Errors.NotFound("user");
-
-        User currentUser = foundUser.get(0);
-        // Check equal token
-        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
-        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
-        if(!serverToken.equals(user.getToken()))
-            return Errors.NotImplemented("Tokens do not match");
-        currentUser.setStatus(DateUtilis.getCurrentDate());
+        // Perform some basic user checking
+        Object check = userCheck(user);
+        if (check instanceof ResponseEntity) return (ResponseEntity<Response>) check;
+        User currentUser = ((User) check);
 
         Optional<Room> foundRoom = roomRepository.findById(user.getRoomID());
         if(!foundRoom.isPresent()) return Errors.NotFound("room");
@@ -287,27 +259,10 @@ public class RoomController {
      */
     @PostMapping("/enter_play_seat")
     public ResponseEntity<Response> joinPlaySeat(@RequestBody User user) {
-        if (user.getUsername() == null) return EmptyError("Username");
-
-        // Check null token
-        if(user.getToken() == null)
-            return Errors.NotImplemented("Token cannot be null");
-
-        // Check null datetime
-        if(user.getStatus() == null)
-            return Errors.NotImplemented("Datetime cannot be null");
-
-        // Find the user
-        List<User> foundUser = userRepository.findByUsername(user.getUsername());
-        if (foundUser.isEmpty()) return Errors.NotFound("user");
-
-        User currentUser = foundUser.get(0);
-        // Check equal token
-        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
-        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
-        if(!serverToken.equals(user.getToken()))
-            return Errors.NotImplemented("Tokens do not match");
-        currentUser.setStatus(DateUtilis.getCurrentDate());
+        // Perform some basic user checking
+        Object check = userCheck(user);
+        if (check instanceof ResponseEntity) return (ResponseEntity<Response>) check;
+        User currentUser = ((User) check);
 
         Room currentRoom = currentUser.getRoom();
         if(currentUser.getRoom() == null)
@@ -346,25 +301,10 @@ public class RoomController {
      */
     @PostMapping("/quit_play_seat")
     public ResponseEntity<Response> quitPlaySeat(@RequestBody User user) {
-        // Check null username
-        if (user.getUsername() == null) return EmptyError("Username");
-
-        // Check null token
-        if(user.getToken() == null) return Errors.NotImplemented("Token cannot be null");
-
-        // Check null datetime
-        if(user.getStatus() == null) return Errors.NotImplemented("Datetime cannot be null");
-
-        List<User> foundUser = userRepository.findByUsername(user.getUsername());
-        if (foundUser.isEmpty()) return Errors.NotFound("user");
-
-        User currentUser = foundUser.get(0);
-        // Check equal token
-        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
-        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
-        if(!serverToken.equals(user.getToken()))
-            return Errors.NotImplemented("Tokens do not match");
-        currentUser.setStatus(DateUtilis.getCurrentDate());
+        // Perform some basic user checking
+        Object check = userCheck(user);
+        if (check instanceof ResponseEntity) return (ResponseEntity<Response>) check;
+        User currentUser = ((User) check);
 
         Room currentRoom = currentUser.getRoom();
         if(currentUser.getRoom() == null) return Errors.NotImplemented("You are not belonged to any rooms");
@@ -388,30 +328,16 @@ public class RoomController {
         return Success.NoData("You are now out of the seat");
     }
 
-    @GetMapping("/get_status_game")
+    @GetMapping("/get_current_room")
     public ResponseEntity<Response> getStatusGame(@RequestBody User user) {
-        // Check null username
-        if (user.getUsername() == null) return EmptyError("Username");
-
-        // Check null token
-        if(user.getToken() == null) return Errors.NotImplemented("Token cannot be null");
-
-        // Check null datetime
-        if(user.getStatus() == null) return Errors.NotImplemented("Datetime cannot be null");
-
-        List<User> foundUser = userRepository.findByUsername(user.getUsername());
-        if (foundUser.isEmpty()) return Errors.NotFound("user");
-
-        User currentUser = foundUser.get(0);
-        // Check equal token
-        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
-        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
-        if(!serverToken.equals(user.getToken()))
-            return Errors.NotImplemented("Tokens do not match");
-        currentUser.setStatus(DateUtilis.getCurrentDate());
+        // Perform some basic user checking
+        Object check = userCheck(user);
+        if (check instanceof ResponseEntity) return (ResponseEntity<Response>) check;
+        User currentUser = ((User) check);
 
         Room currentRoom = currentUser.getRoom();
         if(currentUser.getRoom() == null) return Errors.NotImplemented("You are not belonged to any rooms");
+        currentRoom = Hibernate.unproxy(currentRoom, Room.class);
 
         return Success.WithData("Here is the current room playing", currentRoom);
     }

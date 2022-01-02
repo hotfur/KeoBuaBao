@@ -2,7 +2,6 @@ package com.KeoBuaBao.Controller;
 
 import com.KeoBuaBao.Entity.SingleGame;
 import com.KeoBuaBao.Entity.User;
-import com.KeoBuaBao.HelperClass.*;
 import com.KeoBuaBao.Repository.SingleGameRepository;
 import com.KeoBuaBao.Repository.UserRepository;
 import com.KeoBuaBao.Responses.*;
@@ -12,13 +11,10 @@ import com.KeoBuaBao.Utility.RandomUtilis;
 import com.KeoBuaBao.Utility.SecurityUtils;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * A class controls the single game function
@@ -35,6 +31,36 @@ public class SingleGameController {
     @Autowired
     private UserRepository userRepository;
 
+    private Object userCheck(User user) {
+        // Check null token
+        if(user.getToken() == null)
+            return Errors.NotImplemented("Token cannot be null");
+
+        // Check null datetime
+        if(user.getStatus() == null)
+            return Errors.NotImplemented("Datetime cannot be null");
+
+        // Check null username
+        if(user.getUsername() == null)
+            return Errors.NotFound("user");
+
+        // Find the corresponding user information with the given username.
+        List<User> foundUser = userRepository.findByUsername(user.getUsername());
+        // Catch an error when the user cannot be found
+        if(foundUser.isEmpty()) return Errors.NotFound("user");
+
+        User currentUser = foundUser.get(0); // Get the corresponding user record
+        // Check equal token
+        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
+        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
+        // Remember not implement the request when the tokens do not match
+        if(!serverToken.equals(user.getToken()))
+            return Errors.NotImplemented("Tokens do not match");
+        currentUser.setStatus(DateUtilis.getCurrentDate());
+        userRepository.save(currentUser);
+        return currentUser;
+    }
+
     /**
      * Get all single game has been played
      * @return a list containing all single games
@@ -49,36 +75,21 @@ public class SingleGameController {
      * @param user the user wants to see
      * @return all single games related to that user
      */
-    @GetMapping("/get_player_single_game")
+    @GetMapping("/get_player_games")
     public ResponseEntity<Response> getOnePlayerSingleGame(@RequestBody User user) {
-        // Check null token
-        if(user.getToken() == null)
-            return Errors.NotImplemented("Token cannot be null");
-
-        // Check null datetime
-        if(user.getStatus() == null)
-            return Errors.NotImplemented("Datetime cannot be null");
-
-        List<User> foundUser = userRepository.findByUsername(user.getUsername());
-        if(foundUser.isEmpty())
-            return Errors.NotFound("username");
-
-        User currentUser = foundUser.get(0);
-        // Check equal token
-        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
-        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
-        if(!serverToken.equals(user.getToken()))
-            return Errors.NotImplemented("Tokens do not match");
-        currentUser.setStatus(DateUtilis.getCurrentDate());
+        // Perform some basic user checking
+        Object check = userCheck(user);
+        if (check instanceof ResponseEntity) return (ResponseEntity<Response>) check;
+        User currentUser = ((User) check);
 
         // Get the list of all single game in the database
         List<SingleGame> foundSinglegame = currentUser.getSingleGame();
-        // Fetch them from database
-        for (int i = 0; i < foundSinglegame.size(); i++) foundSinglegame.set(i, Hibernate.unproxy(foundSinglegame.get(i), SingleGame.class));
-        if(!foundSinglegame.isEmpty())
-            return Success.WithData("Here is all of the game from the user" , foundSinglegame);
-        else
-            return Errors.NotFound("user");
+        if(!foundSinglegame.isEmpty()) {
+            // Fetch them from database
+            for (int i = 0; i < foundSinglegame.size(); i++) foundSinglegame.set(i, Hibernate.unproxy(foundSinglegame.get(i), SingleGame.class));
+            return Success.WithData("Here is all of the game from the user", foundSinglegame);
+        }
+        else return Errors.NotFound("games");
     }
 
     /**
@@ -88,27 +99,10 @@ public class SingleGameController {
      */
     @PostMapping("")
     public ResponseEntity<Response> createSingleGame(@RequestBody User user) {
-        // Check null username
-        if (user.getUsername() == null) return Errors.NotFound("user");
-
-        // Check null token
-        if(user.getToken() == null)
-            return Errors.NotImplemented("Token cannot be null");
-
-        // Check null datetime
-        if(user.getStatus() == null)
-            return Errors.NotImplemented("Datetime cannot be null");
-
-        List<User> foundUsername = userRepository.findByUsername(user.getUsername());
-        if (foundUsername.isEmpty()) return Errors.NotFound("user");
-
-        User currentUser = foundUsername.get(0);
-        // Check equal token
-        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
-        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
-        if(!serverToken.equals(user.getToken()))
-            return Errors.NotImplemented("Tokens do not match");
-        currentUser.setStatus(DateUtilis.getCurrentDate());
+        // Perform some basic user checking
+        Object check = userCheck(user);
+        if (check instanceof ResponseEntity) return (ResponseEntity<Response>) check;
+        User currentUser = ((User) check);
 
         // Cannot start another single game when one is playing with the computer
         SingleGame currentSingleGame = currentUser.getCurrentSingleGame();
@@ -117,9 +111,9 @@ public class SingleGameController {
 
         SingleGame newSingleGame = new SingleGame();
         newSingleGame.setUser(currentUser);
-        newSingleGame.setTimePerMove(foundUsername.get(0).getTimePerMove());
-        newSingleGame.setNumberOfRounds(foundUsername.get(0).getNumberRound());
-        newSingleGame.setDifficulty(foundUsername.get(0).getDifficulty());
+        newSingleGame.setTimePerMove(currentUser.getTimePerMove());
+        newSingleGame.setNumberOfRounds(currentUser.getNumberRound());
+        newSingleGame.setDifficulty(currentUser.getDifficulty());
         singleGameRepository.save(newSingleGame);
         
         List<SingleGame> listSingle = currentUser.getSingleGame();
@@ -139,25 +133,10 @@ public class SingleGameController {
      */
     @PostMapping("/play_single")
     public ResponseEntity<Response> playWithComputer(@RequestBody User user) {
-        // Check null token
-        if(user.getToken() == null)
-            return Errors.NotImplemented("Token cannot be null");
-
-        // Check null datetime
-        if(user.getStatus() == null)
-            return Errors.NotImplemented("Datetime cannot be null");
-
-        List<User> foundUser = userRepository.findByUsername(user.getUsername());
-        if(foundUser.isEmpty())
-            return Errors.NotFound("user");
-
-        User currentUser = foundUser.get(0);
-        // Check equal token
-        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
-        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
-        if(!serverToken.equals(user.getToken()))
-            return Errors.NotImplemented("Tokens do not match");
-        currentUser.setStatus(DateUtilis.getCurrentDate());
+        // Perform some basic user checking
+        Object check = userCheck(user);
+        if (check instanceof ResponseEntity) return (ResponseEntity<Response>) check;
+        User currentUser = ((User) check);
 
         long computerMove = RandomUtilis.getRandom(1L, 3L);
 
@@ -189,6 +168,7 @@ public class SingleGameController {
 
             currentUser.setCurrentSingleGame(null);
             userRepository.save(currentUser);
+            currentSingleGame = Hibernate.unproxy(currentSingleGame, SingleGame.class);
             return Errors.NotImplemented("Game over!", currentSingleGame);
         }
 

@@ -2,7 +2,6 @@ package com.KeoBuaBao.Controller;
 
 import com.KeoBuaBao.Entity.*;
 
-import com.KeoBuaBao.HelperClass.*;
 import com.KeoBuaBao.Responses.*;
 import com.KeoBuaBao.Repository.MultiGameRepository;
 import com.KeoBuaBao.Repository.PlayerMultiGameRepository;
@@ -18,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * This class controls the multiplayer games
@@ -35,6 +33,41 @@ public class MultiGameController {
     @Autowired
     private PlayerMultiGameRepository PlayerMultiGameRepository;
 
+    /**
+     * Perform username, datetime, token checks against user provided data to authenticate
+     * @param user the user undergoing authentication
+     * @return ResponseEntity if fail any check, User entity if pass all checks
+     */
+    private Object userCheck(User user) {
+        // Check null token
+        if(user.getToken() == null)
+            return Errors.NotImplemented("Token cannot be null");
+
+        // Check null datetime
+        if(user.getStatus() == null)
+            return Errors.NotImplemented("Datetime cannot be null");
+
+        // Check null username
+        if(user.getUsername() == null)
+            return Errors.NotFound("user");
+
+        // Find the corresponding user information with the given username.
+        List<User> foundUser = userRepository.findByUsername(user.getUsername());
+        // Catch an error when the user cannot be found
+        if(foundUser.isEmpty()) return Errors.NotFound("user");
+
+        User currentUser = foundUser.get(0); // Get the corresponding user record
+        // Check equal token
+        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
+        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
+        // Remember not implement the request when the tokens do not match
+        if(!serverToken.equals(user.getToken()))
+            return Errors.NotImplemented("Tokens do not match");
+        currentUser.setStatus(DateUtilis.getCurrentDate());
+        userRepository.save(currentUser);
+        return currentUser;
+    }
+    
     /**
      * For admin use only
      * @return all multiplayer games in the database
@@ -53,23 +86,10 @@ public class MultiGameController {
      */
     @PostMapping("/start")
     public ResponseEntity<Response> createMutiplayer(@RequestBody User user) {
-        // Check null token
-        if(user.getToken() == null) return Errors.NotImplemented("Token cannot be null");
-
-        // Check null datetime
-        if(user.getStatus() == null) return Errors.NotImplemented("Datetime cannot be null");
-
-        if (user.getUsername() == null) return Errors.NotFound("user");
-
-        List<User> foundUser = userRepository.findByUsername(user.getUsername());
-        if (foundUser.isEmpty()) return Errors.NotFound("user");
-
-        User currentUser = foundUser.get(0);
-        // Check equal token
-        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
-        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
-        if(!serverToken.equals(user.getToken())) return Errors.NotImplemented("Tokens do not match");
-        currentUser.setStatus(DateUtilis.getCurrentDate());
+        // Perform some basic user checking
+        Object check = userCheck(user);
+        if (check instanceof ResponseEntity) return (ResponseEntity<Response>) check;
+        User currentUser = ((User) check);
 
         Room currentRoom = currentUser.getRoom();
         if(currentRoom == null) return Errors.NotFound("room");
@@ -165,33 +185,15 @@ public class MultiGameController {
      */
     @PostMapping("/play")
     public ResponseEntity<Response> playOnline(@RequestBody User user) {
-        // Check null token
-        if(user.getToken() == null)
-            return Errors.NotImplemented("Token cannot be null");
-
-        // Check null datetime
-        if(user.getStatus() == null)
-            return Errors.NotImplemented("Datetime cannot be null");
-
-        // Check for null user
-        if (user.getUsername() == null) return Errors.NotFound("user");
-
         //Check for illegal moves
         if(user.getMove() < 1 || user.getMove() > 3) {
             return Errors.NotImplemented("Illegal move");
         }
 
-        List<User> foundUser = userRepository.findByUsername(user.getUsername());
-        if (foundUser.isEmpty()) return Errors.NotFound("user");
-
-        User currentUser = foundUser.get(0);
-        // Check equal token
-        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
-        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
-        if(!serverToken.equals(user.getToken()))
-            return Errors.NotImplemented("Tokens do not match");
-        currentUser.setStatus(DateUtilis.getCurrentDate());
-        userRepository.save(currentUser);
+        // Perform some basic user checking
+        Object check = userCheck(user);
+        if (check instanceof ResponseEntity) return (ResponseEntity<Response>) check;
+        User currentUser = ((User) check);
 
         Room currentRoom = currentUser.getRoom();
         if (currentRoom == null) return Errors.NotImplemented("You are not in a room");
@@ -276,26 +278,10 @@ public class MultiGameController {
      */
     @GetMapping("/get_round_result")
     public ResponseEntity<Response> getRoundResultMultiplayer(@RequestBody User user) {
-        // Check null token
-        if (user.getToken() == null)
-            return Errors.NotImplemented("Token cannot be null");
-
-        // Check null datetime
-        if (user.getStatus() == null)
-            return Errors.NotImplemented("Datetime cannot be null");
-
-        if (user.getUsername() == null) return Errors.NotFound("user");
-
-        List<User> foundUser = userRepository.findByUsername(user.getUsername());
-        if (foundUser.isEmpty()) return Errors.NotFound("user");
-
-        User currentUser = foundUser.get(0);
-        // Check equal token
-        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
-        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
-        if (!serverToken.equals(user.getToken()))
-            return Errors.NotImplemented("Tokens do not match");
-        currentUser.setStatus(DateUtilis.getCurrentDate());
+        // Perform some basic user checking
+        Object check = userCheck(user);
+        if (check instanceof ResponseEntity) return (ResponseEntity<Response>) check;
+        User currentUser = ((User) check);
 
         Room currentRoom = currentUser.getRoom();
         if (currentRoom == null) return Errors.NotImplemented("You are not in a room");
@@ -342,28 +328,12 @@ public class MultiGameController {
         else return Success.WithData("So far this round ends up with a tie", 0);
     }
 
-    @GetMapping("/get_multi_game")
+    @GetMapping("/get_current_game")
     public ResponseEntity<Response> getAllMultiplayerGame(@RequestBody User user) {
-        // Check null token
-        if (user.getToken() == null)
-            return Errors.NotImplemented("Token cannot be null");
-
-        // Check null datetime
-        if (user.getStatus() == null)
-            return Errors.NotImplemented("Datetime cannot be null");
-
-        if (user.getUsername() == null) return Errors.NotFound("user");
-
-        List<User> foundUser = userRepository.findByUsername(user.getUsername());
-        if (foundUser.isEmpty()) return Errors.NotFound("user");
-
-        User currentUser = foundUser.get(0);
-        // Check equal token
-        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
-        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
-        if (!serverToken.equals(user.getToken()))
-            return Errors.NotImplemented("Tokens do not match");
-        currentUser.setStatus(DateUtilis.getCurrentDate());
+        // Perform some basic user checking
+        Object check = userCheck(user);
+        if (check instanceof ResponseEntity) return (ResponseEntity<Response>) check;
+        User currentUser = ((User) check);
 
         Room currentRoom = currentUser.getRoom();
         if(currentRoom == null)
@@ -371,5 +341,28 @@ public class MultiGameController {
         // Have to actually fetch the object from the db before jackson serialization
         MultiGame currentGame = Hibernate.unproxy(currentRoom.getGame(), MultiGame.class);
         return Success.WithData("Here is the game the room is playing", currentGame);
+    }
+
+    /**
+     * Get all multiplayer game of a specified user
+     * @param user the user wants to see
+     * @return all multiplayer games related to that user
+     */
+    @GetMapping("/get_player_games")
+    public ResponseEntity<Response> getOnePlayerSingleGame(@RequestBody User user) {
+        // Perform some basic user checking
+        Object check = userCheck(user);
+        if (check instanceof ResponseEntity) return (ResponseEntity<Response>) check;
+        User currentUser = ((User) check);
+
+        // Get the list of all single game in the database
+        List<PlayerMultiGame> foundPlayerMultiGame = currentUser.getPlayerMultiGame();
+        if (!foundPlayerMultiGame.isEmpty()) {
+            // Fetch them from database
+            for (int i = 0; i < foundPlayerMultiGame.size(); i++) foundPlayerMultiGame.set(i, Hibernate.unproxy(foundPlayerMultiGame.get(i), PlayerMultiGame.class));
+            return Success.WithData("Here is all of the game from the user" , foundPlayerMultiGame);
+        }
+        else
+            return Errors.NotFound("user");
     }
 }

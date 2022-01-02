@@ -11,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Implement Rest Controller for the User entity
@@ -26,6 +25,37 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
+
+    private Object userCheck(User user) {
+        // Check null token
+        if(user.getToken() == null)
+            return Errors.NotImplemented("Token cannot be null");
+
+        // Check null datetime
+        if(user.getStatus() == null)
+            return Errors.NotImplemented("Datetime cannot be null");
+
+        // Check null username
+        if(user.getUsername() == null)
+            return Errors.NotFound("user");
+
+        // Find the corresponding user information with the given username.
+        List<User> foundUser = userRepository.findByUsername(user.getUsername());
+        // Catch an error when the user cannot be found
+        if(foundUser.isEmpty()) return Errors.NotFound("user");
+
+        User currentUser = foundUser.get(0); // Get the corresponding user record
+        // Check equal token
+        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
+        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
+        // Remember not implement the request when the tokens do not match
+        if(!serverToken.equals(user.getToken()))
+            return Errors.NotImplemented("Tokens do not match");
+        currentUser.setStatus(DateUtilis.getCurrentDate());
+        userRepository.save(currentUser);
+        return currentUser;
+    }
+    
     /**
      * Return a response entity error for a unique field (username, passowrd, etc) been taken
      * @param object a string representation for the field
@@ -62,32 +92,10 @@ public class UserController {
      */
     @GetMapping("/get_one_user")
     public ResponseEntity<Response> getOneUser(@RequestBody User user) {
-        // Check null token
-        if(user.getToken() == null)
-            return Errors.NotImplemented("Token cannot be null");
-
-        // Check null datetime
-        if(user.getStatus() == null)
-            return Errors.NotImplemented("Datetime cannot be null");
-
-        // Check null username
-        if (user.getUsername() == null)
-            return Errors.NotFound("user");
-
-        // Find the corresponding user information with the given username.
-        List<User> foundUser = userRepository.findByUsername(user.getUsername());
-        // Catch an error when the user cannot be found
-        if (foundUser.isEmpty())
-            return Errors.NotFound("user");
-
-        User currentUser = foundUser.get(0);
-        // Check equal token or whether token is expired from the most recent login attempt.
-        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus()))
-            return Errors.Expired("token");
-        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
-        if(!serverToken.equals(user.getToken()))
-            return Errors.NotImplemented("Tokens do not match");
-        currentUser.setStatus(DateUtilis.getCurrentDate());
+        // Perform some basic user checking
+        Object check = userCheck(user);
+        if (check instanceof ResponseEntity) return (ResponseEntity<Response>) check;
+        User currentUser = ((User) check);
 
         return Success.WithData("This user is found", currentUser);
     }
@@ -113,13 +121,11 @@ public class UserController {
 
         // Find username: This step checks username duplication
         var foundUser = userRepository.findByUsername(user.getUsername());
-        if(foundUser.size() > 0)
-            return TakenError("Username");
+        if(foundUser.size() > 0) return TakenError("Username");
 
         // Find email: This step checks email duplication
         var foundEmail = userRepository.findByEmail(user.getEmail());
-        if(foundEmail.size() > 0)
-            return TakenError("Email");
+        if(foundEmail.size() > 0) return TakenError("Email");
 
         // Set all the records to 0 when creating a new account
         user.setWin(0L);
@@ -154,51 +160,31 @@ public class UserController {
      * An API to update the user's information. Initially, the server should check the user's token from the client. If
      * both token resemble, the server will change the user information.
      * The user cannot change his username.
-     * @param newUser new user record to be updated
+     * @param user new user record to be updated
      * @return a response entity represents whether the update is successful or not.
      */
     @PutMapping("")
-    public ResponseEntity<Response> updateUser(@RequestBody User newUser) {
-        // Check null username
-        if(newUser.getUsername() == null)
-            return Errors.NotImplemented("Username cannot be null");
-
-        // Check null token
-        if(newUser.getToken() == null)
-            return Errors.NotImplemented("Token cannot be null");
-
-        // Check null datetime
-        if(newUser.getStatus() == null)
-            return Errors.NotImplemented("Datetime cannot be null");
-
-
-        // Find username
-        var foundUsername = userRepository.findByUsername(newUser.getUsername());
-        if(foundUsername.isEmpty()) return Errors.NotFound("user");
-        User currentUser = foundUsername.get(0);
-
-        // Check equal token
-        if (DateUtilis.isTokenExpired(currentUser.getStatus(), newUser.getStatus())) return Errors.Expired("token");
-        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), newUser.getStatus());
-        if(!serverToken.equals(newUser.getToken()))
-            return Errors.NotImplemented("Tokens do not match");
-        currentUser.setStatus(DateUtilis.getCurrentDate());
+    public ResponseEntity<Response> updateUser(@RequestBody User user) {
+        // Perform some basic user checking
+        Object check = userCheck(user);
+        if (check instanceof ResponseEntity) return (ResponseEntity<Response>) check;
+        User currentUser = ((User) check);
 
         // Update all the fields appropriately
-        if(newUser.getEmail() != null)
-            currentUser.setEmail(newUser.getEmail());
-        if(newUser.getPassword() != null)
-            currentUser.setPassword(SecurityUtils.hashPassword(newUser.getPassword()));
-        if(newUser.getAvatar() != null)
-            currentUser.setAvatar(newUser.getAvatar());
-        if(newUser.getSkinColor() != null)
-            currentUser.setSkinColor(newUser.getSkinColor());
-        if(newUser.getTimePerMove() != null)
-            currentUser.setTimePerMove(newUser.getTimePerMove());
-        if(newUser.getNumberRound() != null)
-            currentUser.setNumberRound(newUser.getNumberRound());
-        if(newUser.getDifficulty() != null)
-            currentUser.setDifficulty(newUser.getDifficulty());
+        if(user.getEmail() != null)
+            currentUser.setEmail(user.getEmail());
+        if(user.getPassword() != null)
+            currentUser.setPassword(SecurityUtils.hashPassword(user.getPassword()));
+        if(user.getAvatar() != null)
+            currentUser.setAvatar(user.getAvatar());
+        if(user.getSkinColor() != null)
+            currentUser.setSkinColor(user.getSkinColor());
+        if(user.getTimePerMove() != null)
+            currentUser.setTimePerMove(user.getTimePerMove());
+        if(user.getNumberRound() != null)
+            currentUser.setNumberRound(user.getNumberRound());
+        if(user.getDifficulty() != null)
+            currentUser.setDifficulty(user.getDifficulty());
 
         userRepository.save(currentUser); // Save the updated record to the database
         return Success.WithData("Update user successfully", currentUser);
@@ -207,33 +193,17 @@ public class UserController {
     /**
      * An API to delete the user. Initially, the server should check the user's token from the client. If both token
      * resemble, the server will change the user information.
-     * @param id the user id to get rid of
      * @param user the user information, which are the token and the status
      * @return The successful message or error
      */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Response> deleteUser(@PathVariable Long id, @RequestBody User user) {
-        // Check null token
-        if(user.getToken() == null)
-            return Errors.NotImplemented("Token cannot be null");
+    @DeleteMapping("")
+    public ResponseEntity<Response> deleteUser(@RequestBody User user) {
+        // Perform some basic user checking
+        Object check = userCheck(user);
+        if (check instanceof ResponseEntity) return (ResponseEntity<Response>) check;
+        User currentUser = ((User) check);
 
-        // Check null datetime
-        if(user.getStatus() == null)
-            return Errors.NotImplemented("Datetime cannot be null");
-
-        Optional<User> foundUser = userRepository.findById(id);
-        if(!foundUser.isPresent())
-            return Errors.NotFound("user");
-
-        User currentUser = foundUser.get();
-        // Check equal token
-        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus()))
-            return Errors.Expired("token");
-        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
-        if(!serverToken.equals(user.getToken()))
-            return Errors.NotImplemented("Tokens do not match");
-
-        userRepository.deleteById(id);
+        userRepository.deleteById(currentUser.getId());
         return Success.NoData("Delete user successfully");
     }
 
