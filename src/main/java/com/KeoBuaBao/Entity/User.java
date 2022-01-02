@@ -56,6 +56,15 @@ public class User {
     @OneToOne(fetch = FetchType.LAZY)
     private SingleGame currentSingleGame; // Link to the current single game that the user is playing
 
+
+    //Transient fields
+
     @Transient
     private String token; // Token authentication: Not store in the database
+    @Transient
+    private int playerPosition; // The player position seat of the user, either player one or two.
+    @Transient
+    private Long roomID; // Room ID to join
+    @Transient
+    private Long move; // The moving request, either Rock, Paper, or Scissors
 }
