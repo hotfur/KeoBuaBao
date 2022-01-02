@@ -11,6 +11,7 @@ import com.KeoBuaBao.Repository.UserRepository;
 import com.KeoBuaBao.Utility.DateUtilis;
 import com.KeoBuaBao.Utility.DetermineResult;
 import com.KeoBuaBao.Utility.SecurityUtils;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -367,6 +368,8 @@ public class MultiGameController {
         Room currentRoom = currentUser.getRoom();
         if(currentRoom == null)
             return Errors.NotFound("Room");
-        return Success.WithData("Here is the game the room is playing", currentRoom.getGame());
+        // Have to actually fetch the object from the db before jackson serialization
+        MultiGame currentGame = Hibernate.unproxy(currentRoom.getGame(), MultiGame.class);
+        return Success.WithData("Here is the game the room is playing", currentGame);
     }
 }
