@@ -75,9 +75,8 @@ public class MultiGameController {
         
         // In order to start the game, it should consist of fully two players
 
-        if(currentRoom.getPlayerOne() == null || currentRoom.getPlayerTwo() == null) {
+        if(currentRoom.getPlayerOne() == null || currentRoom.getPlayerTwo() == null)
             return Errors.NotImplemented("Not enough players to start");
-        }
 
         // Get the two player of the game
         User Player1 = userRepository.findByUsername(currentRoom.getPlayerOne()).get(0);
@@ -159,52 +158,6 @@ public class MultiGameController {
     }
 
     /**
-     * Get a list of player in a multiplayer match.
-     * @param gameID the match that we want to get data from
-     * @param user the user currently requesting the data
-     * @return a list of players in a multiplayer match. errors if failed.
-     */
-    @GetMapping("/{gameID}")
-    public ResponseEntity<Response> getPlayerFromMatch(@PathVariable Long gameID, @RequestBody User user) {
-        // Check null token
-        if(user.getToken() == null)
-            return Errors.NotImplemented("Token cannot be null");
-
-        // Check null datetime
-        if(user.getStatus() == null)
-            return Errors.NotImplemented("Datetime cannot be null");
-
-        if (user.getUsername() == null) return Errors.NotFound("user");
-
-        List<User> foundUser = userRepository.findByUsername(user.getUsername());
-        if (foundUser.isEmpty()) return Errors.NotFound("user");
-
-        User currentUser0 = foundUser.get(0);
-        // Check equal token
-        if (DateUtilis.isTokenExpired(currentUser0.getStatus(), user.getStatus())) return Errors.Expired("token");
-        String serverToken = SecurityUtils.generateToken(currentUser0.getUsername(), currentUser0.getPassword(), user.getStatus());
-        if(!serverToken.equals(user.getToken()))
-            return Errors.NotImplemented("Tokens do not match");
-        currentUser0.setStatus(DateUtilis.getCurrentDate());
-
-        Optional<MultiGame> foundMultiGame = multiGameRepository.findById(gameID);
-        if(!foundMultiGame.isPresent()) return Errors.NotFound("game");
-
-        MultiGame currentMultigame = foundMultiGame.get();
-        var playerMultiGameList = currentMultigame.getPlayerMultiGame();
-        var usernameList = new ArrayList<String>();
-
-        for (PlayerMultiGame playerMultiGame : playerMultiGameList) {
-            User currentUser = playerMultiGame.getUser();
-            String username = currentUser.getUsername();
-            usernameList.add(username);
-        }
-
-        return Success.WithData("Here is the players belong to the match", usernameList);
-    }
-
-
-    /**
      * Allow player to make a move in a multiplayer game
      * @param playerMove an entity contains the player authentication and move information
      * @return errors if failed. Otherwise, a response that acknowledges the move.
@@ -256,9 +209,8 @@ public class MultiGameController {
         int currentPlayer_MoveNumber = currentPlayerMultiGame.getMoves().length();
         int opponentPlayer_MoveNumber = opponentPlayerMultiGame.getMoves().length();
 
-        if (currentPlayer_MoveNumber > opponentPlayer_MoveNumber) {
+        if (currentPlayer_MoveNumber > opponentPlayer_MoveNumber)
             return Errors.NotImplemented("Move already sent! Please wait for the round to end");
-        }
 
         currentPlayerMultiGame.setMoves(currentPlayerMultiGame.getMoves() + playerMove.getMove());
         PlayerMultiGameRepository.save(currentPlayerMultiGame);
@@ -316,13 +268,13 @@ public class MultiGameController {
     }
 
     /**
+     * FLAGGED!!!
      * Return the result of the nearest move to the player.
      * @param user the player who just made a move.
      * @return the result of the previous move. errors if failed.
      */
-    @PostMapping("/get_round_result")
+    @GetMapping("/get_round_result")
     public ResponseEntity<Response> getRoundResultMultiplayer(@RequestBody User user) {
-
         // Check null token
         if (user.getToken() == null)
             return Errors.NotImplemented("Token cannot be null");
@@ -356,7 +308,6 @@ public class MultiGameController {
         var playerMultiGameList = currentMultigame.getPlayerMultiGame();
         String resultOne = currentMultigame.getResultOne();
 
-
         int playerPosition = -1;
         if (user.getUsername().equals(currentRoom.getPlayerOne())) playerPosition = 0;
         else if (user.getUsername().equals(currentRoom.getPlayerTwo())) playerPosition = 1;
@@ -383,10 +334,39 @@ public class MultiGameController {
             }
         }
         // Case 1: When player one wins
-        if (roundResultOne == '+') return Errors.NotImplemented("So far player one wins this round");
-            // Case 2: When player two wins
-        else if (roundResultOne == '-') return Errors.NotImplemented("So far player two wins this round");
-            // Case 3: When the game draws
-        else return Errors.NotImplemented("So far this round ends up with a tie");
+        if (roundResultOne == '+') return Success.WithData("So far player one wins this round", 1);
+        // Case 2: When player two wins
+        else if (roundResultOne == '-') return Success.WithData("So far player two wins this round", 2);
+        // Case 3: When the game draws
+        else return Success.WithData("So far this round ends up with a tie", 0);
+    }
+
+    @GetMapping("/get_multi_game")
+    public ResponseEntity<Response> getAllMultiplayerGame(@RequestBody User user) {
+        // Check null token
+        if (user.getToken() == null)
+            return Errors.NotImplemented("Token cannot be null");
+
+        // Check null datetime
+        if (user.getStatus() == null)
+            return Errors.NotImplemented("Datetime cannot be null");
+
+        if (user.getUsername() == null) return Errors.NotFound("user");
+
+        List<User> foundUser = userRepository.findByUsername(user.getUsername());
+        if (foundUser.isEmpty()) return Errors.NotFound("user");
+
+        User currentUser = foundUser.get(0);
+        // Check equal token
+        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
+        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
+        if (!serverToken.equals(user.getToken()))
+            return Errors.NotImplemented("Tokens do not match");
+        currentUser.setStatus(DateUtilis.getCurrentDate());
+
+        Room currentRoom = currentUser.getRoom();
+        if(currentRoom == null)
+            return Errors.NotFound("Room");
+        return Success.WithData("Here is the game the room is playing", currentRoom.getGame());
     }
 }

@@ -12,6 +12,7 @@ import com.KeoBuaBao.Utility.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpServerErrorException;
 
 import java.util.List;
 import java.util.Optional;
@@ -369,12 +370,49 @@ public class RoomController {
         if(currentUser.getRoom() == null) return Errors.NotImplemented("You are not belonged to any rooms");
 
         // The player is in seat one
-        if(user.getUsername().equals(currentRoom.getPlayerOne())) currentRoom.setPlayerOne(null);
+        if(user.getUsername().equals(currentRoom.getPlayerOne())) {
+            if(currentRoom.getGame() != null)
+                return Errors.NotImplemented("You are in player one, so you cannot quit the game");
+            currentRoom.setPlayerOne(null);
+        }
 
-        else if(user.getUsername().equals(currentRoom.getPlayerTwo())) currentRoom.setPlayerTwo(null);
+        // The player is in seat two
+        else if(user.getUsername().equals(currentRoom.getPlayerTwo())) {
+            if(currentRoom.getGame() != null)
+                return Errors.NotImplemented("You are in player two, so you cannot quit the game");
+            currentRoom.setPlayerTwo(null);
+        }
 
         else return Errors.NotImplemented("You do not belong to any seats");
         roomRepository.save(currentRoom);
         return Success.NoData("You are now out of the seat");
+    }
+
+    @GetMapping("/get_status_game")
+    public ResponseEntity<Response> getStatusGame(@RequestBody User user) {
+        // Check null username
+        if (user.getUsername() == null) return EmptyError("Username");
+
+        // Check null token
+        if(user.getToken() == null) return Errors.NotImplemented("Token cannot be null");
+
+        // Check null datetime
+        if(user.getStatus() == null) return Errors.NotImplemented("Datetime cannot be null");
+
+        List<User> foundUser = userRepository.findByUsername(user.getUsername());
+        if (foundUser.isEmpty()) return Errors.NotFound("user");
+
+        User currentUser = foundUser.get(0);
+        // Check equal token
+        if (DateUtilis.isTokenExpired(currentUser.getStatus(), user.getStatus())) return Errors.Expired("token");
+        String serverToken = SecurityUtils.generateToken(currentUser.getUsername(), currentUser.getPassword(), user.getStatus());
+        if(!serverToken.equals(user.getToken()))
+            return Errors.NotImplemented("Tokens do not match");
+        currentUser.setStatus(DateUtilis.getCurrentDate());
+
+        Room currentRoom = currentUser.getRoom();
+        if(currentUser.getRoom() == null) return Errors.NotImplemented("You are not belonged to any rooms");
+
+        return Success.WithData("Here is the current room playing", currentRoom);
     }
 }

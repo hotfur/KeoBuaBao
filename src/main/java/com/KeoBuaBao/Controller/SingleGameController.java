@@ -84,6 +84,7 @@ public class SingleGameController {
      */
     @PostMapping("")
     public ResponseEntity<Response> createSingleGame(@RequestBody User user) {
+        // Check null username
         if (user.getUsername() == null) return Errors.NotFound("user");
 
         // Check null token
@@ -105,6 +106,11 @@ public class SingleGameController {
             return Errors.NotImplemented("Tokens do not match");
         currentUser.setStatus(DateUtilis.getCurrentDate());
 
+        // Cannot start another single game when one is playing with the computer
+        SingleGame currentSingleGame = currentUser.getCurrentSingleGame();
+        if(currentSingleGame != null)
+            return Errors.NotImplemented("You are playing with the computer");
+
         SingleGame newSingleGame = new SingleGame();
         newSingleGame.setUser(currentUser);
         newSingleGame.setTimePerMove(foundUsername.get(0).getTimePerMove());
@@ -115,6 +121,8 @@ public class SingleGameController {
         List<SingleGame> listSingle = currentUser.getSingleGame();
         listSingle.add(newSingleGame);
         currentUser.setSingleGame(listSingle);
+
+        currentUser.setCurrentSingleGame(newSingleGame);
         userRepository.save(currentUser);
 
         return Success.WithData("New game is successfully added", newSingleGame);
@@ -122,13 +130,11 @@ public class SingleGameController {
 
     /**
      * Allow the player to make moves with a random number generator
-     * @param gameID the single player game id
      * @param playerMove an entity that includes both player authentication and move information
      * @return errors if failed, match result if success
      */
-    @PostMapping("/{gameID}")
-    public ResponseEntity<Response> playWithComputer(@PathVariable long gameID, @RequestBody Move playerMove) {
-
+    @PostMapping("/play_single")
+    public ResponseEntity<Response> playWithComputer(@RequestBody Move playerMove) {
         // Check null token
         if(playerMove.getToken() == null)
             return Errors.NotImplemented("Token cannot be null");
@@ -150,12 +156,14 @@ public class SingleGameController {
         currentUser.setStatus(DateUtilis.getCurrentDate());
 
         long computerMove = RandomUtilis.getRandom(1L, 3L);
-        Optional<SingleGame> foundSingleGame = singleGameRepository.findById(gameID);
-        if(!foundSingleGame.isPresent()) return Errors.NotFound("game belong to the user");
 
         if(playerMove.getMove() < 1 || playerMove.getMove() > 3) return Errors.NotImplemented("Illegal move");
 
-        SingleGame currentSingleGame = foundSingleGame.get();
+        SingleGame currentSingleGame = currentUser.getCurrentSingleGame();
+        if(currentSingleGame == null)
+            return Errors.NotImplemented("You have to create a new game to play");
+
+        // The condition to check when the game is over
         if(currentSingleGame.getResult().length() >= currentSingleGame.getNumberOfRounds()) {
             long countWin = 0;
             long countDraw = 0;
@@ -172,47 +180,39 @@ public class SingleGameController {
 
             DetailResult detailResult = new DetailResult(countWin, countDraw, countLose);
 
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
-                    new Response("done", "Game over!", detailResult)
-            );
+            // Update single record for the user
+            if(countWin > countLose)
+                currentUser.setWinSingle(currentUser.getWinSingle() + 1);
+            else if(countWin < countLose)
+                currentUser.setLostSingle(currentUser.getLostSingle() + 1);
+            else
+                currentUser.setDrawSingle(currentUser.getDrawSingle() + 1);
+
+            currentUser.setCurrentSingleGame(null);
+            userRepository.save(currentUser);
+            return Errors.NotImplemented("Game over!", detailResult);
         }
 
 
         // Player one is the user whereas player two is the computer when passing.
         var resultList = DetermineResult.announceResult(playerMove.getMove(), computerMove);
 
-        SingleGame singleGame = foundSingleGame.get();
-        singleGame.setMoves(singleGame.getMoves() + playerMove.getMove());
-        singleGame.setComputerMoves(singleGame.getComputerMoves() + computerMove);
-        singleGame.setResult(singleGame.getResult() + resultList.get(0));
-        singleGameRepository.save(singleGame);
+        currentSingleGame.setMoves(currentSingleGame.getMoves() + playerMove.getMove());
+        currentSingleGame.setComputerMoves(currentSingleGame.getComputerMoves() + computerMove);
+        currentSingleGame.setResult(currentSingleGame.getResult() + resultList.get(0));
+        singleGameRepository.save(currentSingleGame);
 
         // Winning case: Player beats computer
-        if(resultList.get(0).equals("+") && resultList.get(1).equals("-")) {
-            currentUser.setWinSingle(currentUser.getWinSingle() + 1);
-            userRepository.save(currentUser);
-
+        if(resultList.get(0).equals("+") && resultList.get(1).equals("-"))
             return Success.WithData("Congratulation! You have won this round!", computerMove);
-        }
+
 
         // Losing case: Player loses computer
-        else if(resultList.get(0).equals("-") && resultList.get(1).equals("+")) {
-            currentUser.setLostSingle(currentUser.getLostSingle() + 1);
-            userRepository.save(currentUser);
-
+        else if(resultList.get(0).equals("-") && resultList.get(1).equals("+"))
             return Success.WithData("Unfortunately, the computer has beaten you!", computerMove);
-        }
 
         // Game draw
-        else {
-            currentUser.setDrawSingle(currentUser.getDrawSingle() + 1);
-            userRepository.save(currentUser);
-
+        else
             return Success.WithData("The game results in a draw!", computerMove);
-        }
-
-
-        // Check the result to determine the status of the game. Game with finished status cannot be played.
-        // Return the move from the computer.
     }
 }

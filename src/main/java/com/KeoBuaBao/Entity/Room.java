@@ -30,6 +30,7 @@ public class Room {
     private String playerTwo; // Seat (position) two of a game
     private boolean playerOneReady; // Ready status for player one (true/false)
     private boolean playerTwoReady; // Ready status for player two (true/false)
+
     @JsonIgnore
     @OneToOne(fetch = FetchType.LAZY)
     private MultiGame game; // The game that this room is currently playing

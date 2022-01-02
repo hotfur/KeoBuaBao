@@ -45,12 +45,17 @@ public class User {
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    private Room room; // The room that the user belongs to
+    private Room room; // Link to the room that the user belongs to
 
     private Long status; // Online/Offline x minutes ago. Compare with 30 minutes. Status also saves the Datetime call from Front end.
     private Long winSingle; // Number of win in all single matches with the computer
     private Long drawSingle; // Number of tie in all single matches with the computer
     private Long lostSingle; // Number of lost in all single matches with the computer
+
+    @JsonIgnore
+    @OneToOne(fetch = FetchType.LAZY)
+    private SingleGame currentSingleGame; // Link to the current single game that the user is playing
+
     @Transient
     private String token; // Token authentication: Not store in the database
 }

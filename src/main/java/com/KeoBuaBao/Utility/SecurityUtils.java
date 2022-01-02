@@ -41,7 +41,7 @@ public class SecurityUtils {
      * @return the hashed token for the users to call function
      */
     public static String generateToken(String username, String hashedPassword, Long dateTime) {
-        String code = username + hashedPassword + dateTime; // Concatenation
+        String code = username + hashedPassword + Long.toString(dateTime); // Concatenation
         return SecurityUtils.hashPassword(code); // Hash the concatenated string by SHA-256.
     }
 }
