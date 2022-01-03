@@ -335,7 +335,7 @@ public class RoomController {
         return Success.NoData("You are now out of the seat");
     }
 
-    @GetMapping("/get_current_room")
+    @PostMapping("/get_current_room")
     public ResponseEntity<Response> getStatusGame(@RequestBody User user) {
         // Perform some basic user checking
         Object check = userCheck(user);

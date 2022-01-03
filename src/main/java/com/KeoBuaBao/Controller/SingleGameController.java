@@ -77,7 +77,7 @@ public class SingleGameController {
      * @param user the user wants to see
      * @return all single games related to that user
      */
-    @GetMapping("/get_player_games")
+    @PostMapping("/get_player_games")
     public ResponseEntity<Response> getOnePlayerSingleGame(@RequestBody User user) {
         // Perform some basic user checking
         Object check = userCheck(user);

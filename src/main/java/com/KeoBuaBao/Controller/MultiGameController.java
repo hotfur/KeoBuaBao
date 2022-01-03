@@ -281,7 +281,7 @@ public class MultiGameController {
      * @param user the player who just made a move.
      * @return the result of the previous move. errors if failed.
      */
-    @GetMapping("/get_round_result")
+    @PostMapping("/get_round_result")
     public ResponseEntity<Response> getRoundResultMultiplayer(@RequestBody User user) {
         // Perform some basic user checking
         Object check = userCheck(user);
@@ -333,7 +333,7 @@ public class MultiGameController {
         else return Success.WithData("So far this round ends up with a tie", 0);
     }
 
-    @GetMapping("/get_current_game")
+    @PostMapping("/get_current_game")
     public ResponseEntity<Response> getAllMultiplayerGame(@RequestBody User user) {
         // Perform some basic user checking
         Object check = userCheck(user);
@@ -353,7 +353,7 @@ public class MultiGameController {
      * @param user the user wants to see
      * @return all multiplayer games related to that user
      */
-    @GetMapping("/get_player_games")
+    @PostMapping("/get_player_games")
     public ResponseEntity<Response> getOnePlayerSingleGame(@RequestBody User user) {
         // Perform some basic user checking
         Object check = userCheck(user);
