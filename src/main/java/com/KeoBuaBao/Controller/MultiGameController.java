@@ -10,6 +10,9 @@ import com.KeoBuaBao.Repository.UserRepository;
 import com.KeoBuaBao.Utility.DateUtilis;
 import com.KeoBuaBao.Utility.DetermineResult;
 import com.KeoBuaBao.Utility.SecurityUtils;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +36,14 @@ public class MultiGameController {
     @Autowired
     private PlayerMultiGameRepository PlayerMultiGameRepository;
 
+    @Getter @Setter @NoArgsConstructor
+    private class GameResult {
+        private String player1;
+        private String player2;
+        private long round;
+        private String playerMove;
+        private String opponentMove;
+    }
     /**
      * Perform username, datetime, token checks against user provided data to authenticate
      * @param user the user undergoing authentication
@@ -298,6 +309,8 @@ public class MultiGameController {
         }
 
         var playerMultiGameList = currentMultigame.getPlayerMultiGame();
+        var player1Moves = playerMultiGameList.get(0).getMoves();
+        var player2Moves = playerMultiGameList.get(1).getMoves();
         String resultOne = currentMultigame.getResultOne();
 
         int playerPosition = -1;
@@ -307,30 +320,38 @@ public class MultiGameController {
         // Get the round result
         if (resultOne.isEmpty()) return Success.NoData("First round has not finished");
         char roundResultOne = resultOne.charAt(resultOne.length() - 1);
+        GameResult gameResult = new GameResult();
+        gameResult.setRound(currentMultigame.getNumberRounds());
         if (playerPosition != -1) {
-            if (playerMultiGameList.get(0).getMoves().length() == playerMultiGameList.get(1).getMoves().length()) {
+            if (player1Moves.length() == player2Moves.length()) {
                 String result;
+                gameResult.setPlayerMove(playerMultiGameList.get(playerPosition).getMoves());
+                gameResult.setOpponentMove(playerMultiGameList.get(1-playerPosition).getMoves());
                 if (playerPosition == 0) result = currentMultigame.getResultOne();
                 else result = currentMultigame.getResultTwo();
 
+
                 if (result.charAt(result.length() - 1) == '+')
-                    return Success.NoData("Congratulation! You have won this round!");
+                    return Success.WithData("Congratulation! You have won this round!", gameResult);
 
                 else if (result.charAt(result.length() - 1) == '-')
-                    return Success.NoData("Unfortunately, the opponent has beaten you!");
+                    return Success.WithData("Unfortunately, the opponent has beaten you!", gameResult);
 
-                else return Success.NoData("The game results in a draw!");
+                else return Success.WithData("The game results in a draw!", gameResult);
             }
             else {
                 return Errors.NotImplemented("Please wait for the round to finish");
             }
         }
+        // When spectators view the game then the players will just be just player 1 and 2.
+        gameResult.setPlayer1(player1Moves.substring(player1Moves.length()-1));
+        gameResult.setPlayer2(player2Moves.substring(player2Moves.length()-1));
         // Case 1: When player one wins
-        if (roundResultOne == '+') return Success.WithData("So far player one wins this round", 1);
+        if (roundResultOne == '+') return Success.WithData("So far player one wins this round", gameResult);
         // Case 2: When player two wins
-        else if (roundResultOne == '-') return Success.WithData("So far player two wins this round", 2);
+        else if (roundResultOne == '-') return Success.WithData("So far player two wins this round", gameResult);
         // Case 3: When the game draws
-        else return Success.WithData("So far this round ends up with a tie", 0);
+        else return Success.WithData("So far this round ends up with a tie", gameResult);
     }
 
     @PostMapping("/get_current_game")
@@ -354,7 +375,7 @@ public class MultiGameController {
      * @return all multiplayer games related to that user
      */
     @PostMapping("/get_player_games")
-    public ResponseEntity<Response> getOnePlayerSingleGame(@RequestBody User user) {
+    public ResponseEntity<Response> getOnePlayerMultiGame(@RequestBody User user) {
         // Perform some basic user checking
         Object check = userCheck(user);
         if (check instanceof ResponseEntity) return (ResponseEntity<Response>) check;
