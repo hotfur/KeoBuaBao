@@ -41,8 +41,6 @@ public class MultiGameController {
         private String player1;
         private String player2;
         private long round;
-        private String playerMove;
-        private String opponentMove;
     }
     /**
      * Perform username, datetime, token checks against user provided data to authenticate
@@ -98,7 +96,7 @@ public class MultiGameController {
      * @return errors if failed. success status to indicate the game has been started.
      */
     @PostMapping("/start")
-    public ResponseEntity<Response> createMutiplayer(@RequestBody User user) {
+    public ResponseEntity<Response> createMultiplayer(@RequestBody User user) {
         // Perform some basic user checking
         Object check = userCheck(user);
         if (check instanceof ResponseEntity) return (ResponseEntity<Response>) check;
@@ -322,11 +320,11 @@ public class MultiGameController {
         char roundResultOne = resultOne.charAt(resultOne.length() - 1);
         GameResult gameResult = new GameResult();
         gameResult.setRound(currentMultigame.getNumberRounds());
+        gameResult.setPlayer1(player1Moves.substring(player1Moves.length()-1));
+        gameResult.setPlayer2(player2Moves.substring(player2Moves.length()-1));
         if (playerPosition != -1) {
             if (player1Moves.length() == player2Moves.length()) {
                 String result;
-                gameResult.setPlayerMove(playerMultiGameList.get(playerPosition).getMoves());
-                gameResult.setOpponentMove(playerMultiGameList.get(1-playerPosition).getMoves());
                 if (playerPosition == 0) result = currentMultigame.getResultOne();
                 else result = currentMultigame.getResultTwo();
 
@@ -343,9 +341,6 @@ public class MultiGameController {
                 return Errors.NotImplemented("Please wait for the round to finish");
             }
         }
-        // When spectators view the game then the players will just be just player 1 and 2.
-        gameResult.setPlayer1(player1Moves.substring(player1Moves.length()-1));
-        gameResult.setPlayer2(player2Moves.substring(player2Moves.length()-1));
         // Case 1: When player one wins
         if (roundResultOne == '+') return Success.WithData("So far player one wins this round", gameResult);
         // Case 2: When player two wins

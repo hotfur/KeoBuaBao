@@ -25,6 +25,20 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
+    /**
+     * Checking for restricted character in sequence
+     * @param seq the sequence to be checked for restricted characters
+     * @param notAllowedChars a string containing restricted characters
+     * @param object the description of the sequence
+     * @return an error response entity if the sequence contains restricted character, otherwise null
+     */
+    private ResponseEntity<Response> rejectRestrictedChars(String seq, String notAllowedChars, String object) {
+        for (int i = 0; i < seq.length(); i++)
+            // find the character from the user that matches restricted characters
+            if (notAllowedChars.indexOf(seq.charAt(i)) != -1)
+                return Errors.NotImplemented("The following characters are not allowed in " + object + " :" + notAllowedChars);
+        return null;
+    }
 
     private Object userCheck(User user) {
         // Check null token
@@ -59,7 +73,7 @@ public class UserController {
     }
     
     /**
-     * Return a response entity error for a unique field (username, passowrd, etc) been taken
+     * Return a response entity error for a unique field (username, password, etc.) been taken
      * @param object a string representation for the field
      * @return a response entity with the "already taken" message
      *
@@ -89,7 +103,7 @@ public class UserController {
 
     /**
      * An API to get one user information
-     * @param user the user information: usernamea and token authentication
+     * @param user the user information: username and token authentication
      * @return a response entity represents a given user information
      */
     @GetMapping("/get_one_user")
@@ -120,6 +134,11 @@ public class UserController {
         // Check null email
         if(user.getEmail() == null)
             return EmptyError("Email");
+
+        String username = user.getUsername();
+        // Check invalid username: No space
+        var validUsernameResponse = rejectRestrictedChars(username," ", "username");
+        if (validUsernameResponse != null) return validUsernameResponse;
 
         // Find username: This step checks username duplication
         var foundUser = userRepository.findByUsername(user.getUsername());
