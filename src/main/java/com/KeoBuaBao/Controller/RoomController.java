@@ -139,7 +139,8 @@ public class RoomController {
         // If there is a game already in process and the user wants to quit is the player, then he loses.
         MultiGame currentGame = currentRoom.getGame();
         if (currentGame != null) {
-            if (currentRoom.getPlayerOne() != null && currentRoom.getPlayerOne().equals(user.getUsername())) {
+            if (currentGame.getResultOne().length() < currentGame.getNumberRounds()) {
+                if (currentRoom.getPlayerOne() != null && currentRoom.getPlayerOne().equals(user.getUsername())) {
                 currentGame.setAbort1(true);
                 multiGameRepository.save(currentGame);
 
@@ -164,14 +165,14 @@ public class RoomController {
                 currentRoom.setPlayerTwoReady(false);
                 currentRoom.setGame(null);
 
-                currentUser.setLoss(currentUser.getLoss()+1);
+                currentUser.setLoss(currentUser.getLoss() + 1);
                 User oppponent = userRepository.findByUsername(currentRoom.getPlayerOne()).get(0);
-                oppponent.setWin(oppponent.getWin()+1);
+                oppponent.setWin(oppponent.getWin() + 1);
                 userRepository.save(currentUser);
                 userRepository.save(oppponent);
             }
+            }
         }
-        else {
             if (currentRoom.getPlayerOne() != null && currentRoom.getPlayerOne().equals(user.getUsername())) {
                 currentRoom.setPlayerOne(null);
                 currentRoom.setPlayerTwoReady(false);
@@ -183,7 +184,6 @@ public class RoomController {
                 currentRoom.setPlayerTwoReady(false);
                 currentRoom.setPlayerOneReady(false);
             }
-        }
 
         roomRepository.save(currentRoom); // Update the room information entity when done
 
@@ -315,18 +315,23 @@ public class RoomController {
 
         Room currentRoom = currentUser.getRoom();
         if(currentUser.getRoom() == null) return Errors.NotImplemented("You are not belonged to any rooms");
+        MultiGame currentGame = currentRoom.getGame();
 
         // The player is in seat one
         if(user.getUsername().equals(currentRoom.getPlayerOne())) {
-            if(currentRoom.getGame() != null)
-                return Errors.NotImplemented("You are in player one, so you cannot quit the game");
+            if(currentGame != null) {
+                if (currentGame.getResultOne().length() < currentGame.getNumberRounds())
+                    return Errors.NotImplemented("You are in player one, so you cannot quit the game");
+            }
             currentRoom.setPlayerOne(null);
         }
 
         // The player is in seat two
         else if(user.getUsername().equals(currentRoom.getPlayerTwo())) {
-            if(currentRoom.getGame() != null)
-                return Errors.NotImplemented("You are in player two, so you cannot quit the game");
+            if(currentGame != null) {
+                if (currentGame.getResultOne().length() < currentGame.getNumberRounds())
+                    return Errors.NotImplemented("You are in player two, so you cannot quit the game");
+            }
             currentRoom.setPlayerTwo(null);
         }
 

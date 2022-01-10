@@ -115,7 +115,9 @@ public class MultiGameController {
         User Player2 = userRepository.findByUsername(currentRoom.getPlayerTwo()).get(0);
 
         // Check if the game have been started
-        if (currentRoom.getGame() != null) return Errors.NotImplemented("The game has started!");
+        if (currentRoom.getGame() != null)
+            if (currentRoom.getGame().getResultOne().length() < currentRoom.getGame().getNumberRounds())
+                return Errors.NotImplemented("The game has started!", currentRoom.getGame());
 
         //Check if the current user is indeed player 1 or 2, otherwise refuse to start the game
         if(Player1.getUsername().equals(user.getUsername())) {
@@ -213,7 +215,8 @@ public class MultiGameController {
         if (currentRoom == null) return Errors.NotImplemented("You are not in a room");
         MultiGame currentMultigame = currentRoom.getGame();
         if (currentMultigame == null) return Errors.NotImplemented("No game is being played at the moment");
-
+        else if (currentMultigame.getResultOne().length() >= currentMultigame.getNumberRounds())
+            return Errors.NotImplemented("The game has ended", currentMultigame);
 
         int playerPosition;
         if (user.getUsername().equals(currentRoom.getPlayerOne())) playerPosition = 0;
@@ -243,14 +246,12 @@ public class MultiGameController {
             currentMultigame.setResultTwo(currentMultigame.getResultTwo() + resultList.get(1));
             multiGameRepository.save(currentMultigame);
 
-            // If this is the ending move, then reset the ready counter and disassociate the current game
-            // with this room, allowing players to play more games.
+            // If this is the ending move, then reset the ready counter, allowing players to play more games.
 
             //We have to update the final result of the match into user database too
             if (currentMultigame.getResultOne().length() >= currentMultigame.getNumberRounds()) {
                 currentRoom.setPlayerOneReady(false);
                 currentRoom.setPlayerTwoReady(false);
-                currentRoom.setGame(null);
                 roomRepository.save(currentRoom);
 
                 User player1 = playerMultiGameList.get(0).getUser();
@@ -301,10 +302,6 @@ public class MultiGameController {
         if (currentRoom == null) return Errors.NotImplemented("You are not in a room");
         MultiGame currentMultigame = currentRoom.getGame();
         if (currentMultigame == null) return Errors.NotImplemented("No game is being played at the moment");
-
-        if (currentMultigame.getResultOne().length() >= currentMultigame.getNumberRounds()) {
-            return Errors.NotImplemented("The game is over!");
-        }
 
         var playerMultiGameList = currentMultigame.getPlayerMultiGame();
         var player1Moves = playerMultiGameList.get(0).getMoves();
