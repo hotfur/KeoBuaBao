@@ -24,8 +24,6 @@ public class Room {
 
     private String host; // The host of the room. There is only one host in each room.
     private String players; // All players (username) in the room, separated by a blank space
-    private String disconnectedPlayers = ""; // Save the players (username) been disconnected from the server
-    private String timersSinceDisconnected = ""; // Save the time disconnection for each disconnected player respectively
     private String playerOne; // Seat (position) one of a game
     private String playerTwo; // Seat (position) two of a game
     private boolean playerOneReady; // Ready status for player one (true/false)
