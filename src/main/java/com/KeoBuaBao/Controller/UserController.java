@@ -36,7 +36,7 @@ public class UserController {
         for (int i = 0; i < seq.length(); i++)
             // find the character from the user that matches restricted characters
             if (notAllowedChars.indexOf(seq.charAt(i)) != -1)
-                return Errors.NotImplemented("The following characters are not allowed in " + object + " :" + notAllowedChars);
+                return Errors.NotImplemented("The following characters are not allowed in " + object + ":" + notAllowedChars);
         return null;
     }
 

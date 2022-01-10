@@ -27,7 +27,8 @@ public class DateUtilis {
      * @return true iff the token is expired. The user needs to re-login
      */
     public static boolean isTokenExpired(long date1, long date2) {
-        return date1 + DAY_LONG_MILISECOND < date2;
+        long currentDate = getCurrentDate();
+        return currentDate > date2 + DAY_LONG_MILISECOND && currentDate > date1 + DAY_LONG_MILISECOND;
     }
 
     /** Determine whether the token is able to generate a new one. If the user last login is less than one day and he
@@ -39,6 +40,7 @@ public class DateUtilis {
      */
 
     public static boolean eligibleToRenew(long date1, long date2) {
-        return date1 + ONE_HOUR > getCurrentDate() && getCurrentDate() < DAY_LONG_MILISECOND + date2;
+        long currentDate = getCurrentDate();
+        return date1 + ONE_HOUR > currentDate && currentDate < DAY_LONG_MILISECOND + date2;
     }
 }
