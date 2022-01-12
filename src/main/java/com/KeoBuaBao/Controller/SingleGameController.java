@@ -148,6 +148,14 @@ public class SingleGameController {
         if(currentSingleGame == null)
             return Errors.NotImplemented("You have to create a new game to play");
 
+        // Player one is the user whereas player two is the computer when passing.
+        var resultList = DetermineResult.announceResult(user.getMove(), computerMove);
+
+        currentSingleGame.setMoves(currentSingleGame.getMoves() + user.getMove());
+        currentSingleGame.setComputerMoves(currentSingleGame.getComputerMoves() + computerMove);
+        currentSingleGame.setResult(currentSingleGame.getResult() + resultList.get(0));
+        singleGameRepository.save(currentSingleGame);
+
         // The condition to check when the game is over
         if(currentSingleGame.getResult().length() >= currentSingleGame.getNumberOfRounds()) {
             long countWin = 0;
@@ -170,18 +178,7 @@ public class SingleGameController {
 
             currentUser.setCurrentSingleGame(null);
             userRepository.save(currentUser);
-            currentSingleGame = Hibernate.unproxy(currentSingleGame, SingleGame.class);
-            return Errors.NotImplemented("Game over!", currentSingleGame);
         }
-
-
-        // Player one is the user whereas player two is the computer when passing.
-        var resultList = DetermineResult.announceResult(user.getMove(), computerMove);
-
-        currentSingleGame.setMoves(currentSingleGame.getMoves() + user.getMove());
-        currentSingleGame.setComputerMoves(currentSingleGame.getComputerMoves() + computerMove);
-        currentSingleGame.setResult(currentSingleGame.getResult() + resultList.get(0));
-        singleGameRepository.save(currentSingleGame);
 
         // Winning case: Player beats computer
         if(resultList.get(0).equals("+") && resultList.get(1).equals("-"))
